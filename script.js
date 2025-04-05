@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isGameActive = false;
     let playerX = 10;
     let playerY = 10;
-    const speedFactor = 0.075; // Keep the speed factor from before (or adjust)
+    const speedFactor = 0.1; // Keep the speed factor from before (or adjust)
 
     // --- Check elements ---
     // Updated check to include controls
