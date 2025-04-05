@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Square Target Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Square Target Game</h1>
+
+    <button id="start-button" tabindex="0">Start Game</button>
+
+    <div id="rules-screen" class="hidden">
+        <h2>How to Play</h2>
+        <p>Use the <kbd>▲</kbd> <kbd>▼</kbd> <kbd>◄</kbd> <kbd>►</kbd> arrow keys to move the blue square.</p>
+        <p>Move the square onto the red target to score points.</p>
+        <p>Each time you score, the target moves!</p>
+        <button id="play-button" tabindex="0">Play Now!</button>
+    </div>
+
+    <div id="game-area" class="hidden" tabindex="-1">
+        <div id="player"></div>
+        <div id="target"></div>
+    </div>
+
+    <div id="score-display" class="hidden">
+         <p>Score: <span id="score">0</span></p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
