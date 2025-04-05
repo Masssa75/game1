@@ -1,112 +1,59 @@
-body {
+/* --- Add these new styles to your existing style.css --- */
+
+#controls {
+    margin-top: 15px; /* Space above controls */
+    text-align: center; /* Center buttons */
+    /* Prevent text selection on buttons */
+    user-select: none;
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* IE/Edge */
+}
+
+#controls button {
+    font-size: 1.8em; /* Make buttons bigger */
+    padding: 8px 15px; /* Adjust padding */
+    min-width: 60px;  /* Ensure minimum width */
+    margin: 5px;      /* Spacing between buttons */
+    background-color: #d3d3d3; /* Light grey */
+    color: #333;
+    border: 1px solid #aaa;
+    border-radius: 8px;
+    line-height: 1.2; /* Adjust line height for symbols */
+}
+
+#controls button:active { /* Style when button is pressed */
+    background-color: #bbb;
+}
+
+/* Simple layout for left/right buttons */
+#controls > div {
     display: flex;
     justify-content: center;
-    align-items: center;
-    min-height: 95vh;
-    flex-direction: column;
-    background-color: #f0f0f0;
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 10px;
-    box-sizing: border-box;
 }
 
-h1, h2 {
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-p {
-    margin-top: 5px;
-    margin-bottom: 10px;
-    font-size: 1.1em;
-    text-align: center;
-}
-
-kbd {
-    background-color: #eee;
-    border-radius: 3px;
-    border: 1px solid #b4b4b4;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 2px 0 0 rgba(255, 255, 255, .7) inset;
-    color: #333;
-    display: inline-block;
-    font-size: 0.85em;
-    font-weight: 700;
-    line-height: 1;
-    padding: 2px 4px;
-    white-space: nowrap;
-}
-
-
-button {
-    padding: 10px 20px;
-    font-size: 1.1em;
-    cursor: pointer;
-    border: 1px solid #333;
-    border-radius: 5px;
-    background-color: #4CAF50;
-    color: white;
-    margin-top: 15px;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-button:focus {
-    outline: 2px solid blue;
-    outline-offset: 2px;
-}
-
-#rules-screen {
-    border: 2px solid #ccc;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    width: 80%;
-    max-width: 500px;
-    text-align: center;
-}
-
-#game-area {
-    width: 90%;
-    max-width: 600px;
-    height: 400px;
-    border: 3px solid black;
-    position: relative;
-    background-color: #ffffff;
-    overflow: hidden;
-    margin-top: 15px;
-    cursor: default;
-}
-
-#game-area:focus {
-    outline: none;
-}
-
-#player {
-    width: 30px;
-    height: 30px;
-    background-color: blue;
-    position: absolute;
-    top: 10px;
-    left: 10px;
-}
-
-#target {
-    width: 35px;
-    height: 35px;
-    background-color: red;
-    border-radius: 50%;
-    position: absolute;
-}
-
-#score-display {
-    margin-top: 15px;
-}
-
-/* This rule MUST exist */
+/* Ensure hidden class still exists */
 .hidden {
     display: none;
 }
+
+/* --- You might also want to ensure body/html take full height on mobile --- */
+html, body {
+    height: 100%;
+    overscroll-behavior-y: contain; /* Prevent pull-to-refresh */
+}
+
+body {
+    min-height: 100%; /* Ensure body tries to fill height */
+     /* Adjust flex settings slightly for mobile view */
+    justify-content: space-around; /* Space out elements vertically */
+}
+
+#game-area {
+    /* Max height to prevent excessive stretching on tall screens */
+    max-height: 70vh;
+     /* You might need to adjust width/max-width if it looks bad on narrow screens */
+    /* width: 95%; */
+}
+
+/* --- End of new styles --- */

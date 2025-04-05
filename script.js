@@ -9,85 +9,72 @@ document.addEventListener('DOMContentLoaded', () => {
     const target = document.getElementById('target');
     const scoreDisplayContainer = document.getElementById('score-display');
     const scoreSpan = document.getElementById('score');
+    // New: Get controls container and buttons
+    const controlsContainer = document.getElementById('controls');
+    const btnUp = document.getElementById('btn-up');
+    const btnDown = document.getElementById('btn-down');
+    const btnLeft = document.getElementById('btn-left');
+    const btnRight = document.getElementById('btn-right');
+
 
     // Game state variables
     let score = 0;
     let isGameActive = false;
     let playerX = 10;
     let playerY = 10;
-    // REMOVED: const playerSpeed = 10;
-    // NEW: Define speed as a fraction of the game area dimensions
-    const speedFactor = 0.075; // Move 2.5% of the dimension per key press
+    const speedFactor = 0.075; // Keep the speed factor from before (or adjust)
 
-    // Check elements exist
-    if (!startButton || !rulesScreen || !playButton || !gameArea || !player || !target || !scoreDisplayContainer || !scoreSpan) {
+    // --- Check elements ---
+    // Updated check to include controls
+    if (!startButton || !rulesScreen || !playButton || !gameArea || !player || !target ||
+        !scoreDisplayContainer || !scoreSpan || !controlsContainer ||
+        !btnUp || !btnDown || !btnLeft || !btnRight) {
         console.error("One or more required game elements are missing!");
-        document.body.innerHTML = "<h1>Error loading game elements. Please check the HTML structure.</h1>";
+        document.body.innerHTML = "<h1>Error loading game elements. Please check HTML structure/IDs.</h1>";
         return;
     }
 
-    // --- Function to move the target ---
-    function moveTarget() {
-        const gameAreaWidth = gameArea.offsetWidth;
-        const gameAreaHeight = gameArea.offsetHeight;
-        const targetWidth = target.offsetWidth;
-        const targetHeight = target.offsetHeight;
-
-        if (gameAreaWidth <= targetWidth || gameAreaHeight <= targetHeight) {
-            target.style.left = '0px'; target.style.top = '0px'; return;
-        }
-        const maxX = gameAreaWidth - targetWidth;
-        const maxY = gameAreaHeight - targetHeight;
-        const randomX = Math.floor(Math.random() * maxX);
-        const randomY = Math.floor(Math.random() * maxY);
-        target.style.left = randomX + 'px';
-        target.style.top = randomY + 'px';
+    // --- Function to move target --- (Keep as is)
+    function moveTarget() { /* ... same code as before ... */
+        const gameAreaWidth = gameArea.offsetWidth; const gameAreaHeight = gameArea.offsetHeight;
+        const targetWidth = target.offsetWidth; const targetHeight = target.offsetHeight;
+        if (gameAreaWidth <= targetWidth || gameAreaHeight <= targetHeight) { target.style.left = '0px'; target.style.top = '0px'; return; }
+        const maxX = gameAreaWidth - targetWidth; const maxY = gameAreaHeight - targetHeight;
+        const randomX = Math.floor(Math.random() * maxX); const randomY = Math.floor(Math.random() * maxY);
+        target.style.left = randomX + 'px'; target.style.top = randomY + 'px';
     }
 
-     // --- Function to update player position ---
-     function updatePlayerPosition() {
-        player.style.left = playerX + 'px';
-        player.style.top = playerY + 'px';
+    // --- Function to update player position --- (Keep as is)
+    function updatePlayerPosition() { /* ... same code as before ... */
+        player.style.left = playerX + 'px'; player.style.top = playerY + 'px';
     }
 
-    // --- Collision Detection ---
-    function checkCollision() {
+    // --- Collision Detection --- (Keep as is)
+    function checkCollision() { /* ... same code as before ... */
         const playerRect = { left: playerX, top: playerY, right: playerX + player.offsetWidth, bottom: playerY + player.offsetHeight };
         const targetRect = { left: target.offsetLeft, top: target.offsetTop, right: target.offsetLeft + target.offsetWidth, bottom: target.offsetTop + target.offsetHeight };
         return ( playerRect.left < targetRect.right && playerRect.right > targetRect.left && playerRect.top < targetRect.bottom && playerRect.bottom > targetRect.top );
     }
 
-    // --- Handle Keyboard Input ---
-    function handleKeyDown(event) {
-        if (!isGameActive) return;
-        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) { event.preventDefault(); }
+    // --- NEW: Refactored Movement Logic ---
+    function movePlayer(direction) {
+        if (!isGameActive) return; // Only move if game is active
 
-        // Calculate dynamic speed based on game area size
+        // Calculate dynamic speed
         const gameAreaWidth = gameArea.offsetWidth;
         const gameAreaHeight = gameArea.offsetHeight;
-        // Calculate horizontal/vertical movement ensuring it's at least 1 pixel
         const moveX = Math.max(1, gameAreaWidth * speedFactor);
         const moveY = Math.max(1, gameAreaHeight * speedFactor);
 
-        // Calculate potential new position
+        // Calculate potential new position based on direction
         let newX = playerX;
         let newY = playerY;
 
-        switch (event.key) {
-            case "ArrowUp":
-                newY -= moveY; // Use dynamic vertical speed
-                break;
-            case "ArrowDown":
-                newY += moveY; // Use dynamic vertical speed
-                break;
-            case "ArrowLeft":
-                newX -= moveX; // Use dynamic horizontal speed
-                break;
-            case "ArrowRight":
-                newX += moveX; // Use dynamic horizontal speed
-                break;
-            default:
-                return;
+        switch (direction) {
+            case "up":    newY -= moveY; break;
+            case "down":  newY += moveY; break;
+            case "left":  newX -= moveX; break;
+            case "right": newX += moveX; break;
         }
 
         // Boundary checks
@@ -98,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         updatePlayerPosition();
 
+        // Check for collision after moving
         if (checkCollision()) {
             score++;
             scoreSpan.textContent = score;
@@ -105,32 +93,50 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Function to start the game ---
+    // --- UPDATED: Handle Keyboard Input ---
+    function handleKeyDown(event) {
+        if (!isGameActive) return;
+         // Only prevent default for arrow keys if game is active and focused?
+        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+             event.preventDefault(); // Prevent scrolling page
+             switch (event.key) {
+                 case "ArrowUp":    movePlayer('up');    break;
+                 case "ArrowDown":  movePlayer('down');  break;
+                 case "ArrowLeft":  movePlayer('left');  break;
+                 case "ArrowRight": movePlayer('right'); break;
+             }
+        }
+    }
+
+    // --- UPDATED: Function to start the game ---
     function startGame() {
         isGameActive = true;
         score = 0;
         scoreSpan.textContent = score;
-        playerX = 10; playerY = 10; updatePlayerPosition(); // Reset player
+        playerX = 10; playerY = 10; updatePlayerPosition();
 
         rulesScreen.classList.add('hidden');
+        // Show game elements AND controls
         gameArea.classList.remove('hidden');
         scoreDisplayContainer.classList.remove('hidden');
+        controlsContainer.classList.remove('hidden'); // Show controls
 
         moveTarget();
-        gameArea.focus();
+        gameArea.focus(); // Still useful for potential keyboard use
     }
 
-    // --- Event Listeners ---
-    startButton.addEventListener('click', () => {
-        startButton.classList.add('hidden');
-        rulesScreen.classList.remove('hidden');
-        playButton.focus();
-    });
-
-    playButton.addEventListener('click', () => {
-        startGame();
-    });
-
+    // --- Event Listeners --- (Keep Start/Play button listeners as is)
+    startButton.addEventListener('click', () => { /* ... same ... */
+        startButton.classList.add('hidden'); rulesScreen.classList.remove('hidden'); playButton.focus();
+     });
+    playButton.addEventListener('click', startGame);
     document.addEventListener('keydown', handleKeyDown);
 
-});
+    // --- NEW: Add Button Click Listeners ---
+    // Using 'click' works for both mouse and basic taps on touchscreens
+    btnUp.addEventListener('click', () => movePlayer('up'));
+    btnDown.addEventListener('click', () => movePlayer('down'));
+    btnLeft.addEventListener('click', () => movePlayer('left'));
+    btnRight.addEventListener('click', () => movePlayer('right'));
+
+}); // End of DOMContentLoaded listener
