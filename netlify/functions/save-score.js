@@ -22,7 +22,6 @@ exports.handler = async (event, context) => {
   // 1. Check Authentication (Netlify Identity)
   const { user } = context.clientContext;
   if (!user) {
-    // User context might be missing if function is called without token or identity isn't set up
     // console.log("Save score function invoked - User not found in context."); // Optional server log
     return { statusCode: 401, headers, body: JSON.stringify({ error: 'You must be logged in to save scores.' }) };
   }
@@ -47,14 +46,12 @@ exports.handler = async (event, context) => {
         throw new Error('Invalid score data type provided.');
     }
     // *** ADD VALIDATION FOR wallet_address ***
-    // Basic check: Ensure it's a non-empty string (more robust checks like regex could be added if needed)
     if (typeof scoreData.wallet_address !== 'string' || !scoreData.wallet_address.trim()) {
          throw new Error('Invalid or missing wallet_address provided.');
     }
     // *****************************************
   } catch (error) {
     console.error('Error parsing request body:', error.message);
-    // Provide the specific parsing error back to the client if possible
     return { statusCode: 400, headers, body: JSON.stringify({ error: `Bad request: ${error.message}` }) };
   }
 
@@ -75,10 +72,8 @@ exports.handler = async (event, context) => {
       .insert([dataToInsert])   // Insert the prepared data object
       .select();                // Optionally return the inserted row(s)
 
-    // Handle potential Supabase errors during insert
     if (error) {
       console.error('Supabase insert error:', error);
-      // Check for specific Supabase error codes if needed (e.g., unique constraint violation)
       throw error; // Re-throw to be caught by the outer catch block
     }
 
@@ -90,7 +85,6 @@ exports.handler = async (event, context) => {
     };
 
   } catch (error) {
-    // Catch errors from the insert operation or re-thrown errors
     console.error('Error saving score to Supabase:', error.message);
     return {
       statusCode: 500, // Internal Server Error
