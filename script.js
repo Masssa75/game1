@@ -1,4 +1,4 @@
-// script.js - Snake Game Step 5: Token Holding Requirement Check (Corrected Again)
+// script.js - Snake Game Step 5: Token Holding Requirement Check (Corrected Const Assignment)
 /* global ethers, netlifyIdentity */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,9 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const walletStatusDiv = document.getElementById('wallet-status');
     const walletSectionDiv = document.getElementById('wallet-section');
     const signScoreBtn = document.getElementById('sign-score-btn');
-    // --- New Token Info Elements ---
-    const tokenInfoSpan = document.querySelector('.token-info');
-    const tokenBalanceSpan = document.getElementById('token-balance');
+    // --- New Token Info Elements (Using LET instead of CONST) ---
+    let tokenInfoSpan = document.querySelector('.token-info');   // *** CHANGED to let ***
+    let tokenBalanceSpan = document.getElementById('token-balance'); // *** CHANGED to let ***
     // --- Create status div dynamically ---
     const playabilityStatusDiv = document.createElement('div');
     playabilityStatusDiv.setAttribute('id', 'playability-status');
@@ -45,11 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Token Contract Constants ---
     const TOKEN_CONTRACT_ADDRESS = "0x3Aa2BAbD88056a6bA995056B6e139C42411b068E";
-    // *** CORRECTED ABI ASSIGNMENT ***
     const TOKEN_ABI = [ { "inputs": [ { "internalType": "string", "name": "name", "type": "string" }, { "internalType": "string", "name": "symbol", "type": "string" }, { "internalType": "address", "name": "_pulseXRouter", "type": "address" }, { "internalType": "address", "name": "_forgeAddress", "type": "address" }, { "internalType": "address", "name": "_founderTaxAddress", "type": "address" }, { "internalType": "address", "name": "_forgeTaxAddress", "type": "address" }, { "internalType": "address", "name": "_communityDistributionWallet", "type": "address" }, { "internalType": "uint256", "name": "_founderTaxRate", "type": "uint256" } ], "stateMutability": "nonpayable", "type": "constructor" }, { "inputs": [ { "internalType": "address", "name": "spender", "type": "address" }, { "internalType": "uint256", "name": "allowance", "type": "uint256" }, { "internalType": "uint256", "name": "needed", "type": "uint256" } ], "name": "ERC20InsufficientAllowance", "type": "error" }, { "inputs": [ { "internalType": "address", "name": "sender", "type": "address" }, { "internalType": "uint256", "name": "balance", "type": "uint256" }, { "internalType": "uint256", "name": "needed", "type": "uint256" } ], "name": "ERC20InsufficientBalance", "type": "error" }, { "inputs": [ { "internalType": "address", "name": "approver", "type": "address" } ], "name": "ERC20InvalidApprover", "type": "error" }, { "inputs": [ { "internalType": "address", "name": "receiver", "type": "address" } ], "name": "ERC20InvalidReceiver", "type": "error" }, { "inputs": [ { "internalType": "address", "name": "sender", "type": "address" } ], "name": "ERC20InvalidSender", "type": "error" }, { "inputs": [ { "internalType": "address", "name": "spender", "type": "address" } ], "name": "ERC20InvalidSpender", "type": "error" }, { "inputs": [ { "internalType": "address", "name": "owner", "type": "address" } ], "name": "OwnableInvalidOwner", "type": "error" }, { "inputs": [ { "internalType": "address", "name": "account", "type": "address" } ], "name": "OwnableUnauthorizedAccount", "type": "error" }, { "inputs": [], "name": "ReentrancyGuardReentrantCall", "type": "error" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "owner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "spender", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "value", "type": "uint256" } ], "name": "Approval", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": false, "internalType": "uint256", "name": "oldRate", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "newFounderTaxRate", "type": "uint256" } ], "name": "FounderTaxRateUpdated", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "previousOwner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "OwnershipTransferred", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "newRouter", "type": "address" } ], "name": "RouterUpdated", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "newAddress", "type": "address" }, { "indexed": false, "internalType": "string", "name": "walletType", "type": "string" } ], "name": "TaxAddressUpdated", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": false, "internalType": "address", "name": "sender", "type": "address" }, { "indexed": false, "internalType": "address", "name": "recipient", "type": "address" }, { "indexed": false, "internalType": "bool", "name": "isSenderExempt", "type": "bool" }, { "indexed": false, "internalType": "bool", "name": "isRecipientExempt", "type": "bool" }, { "indexed": false, "internalType": "uint256", "name": "founderTaxAmount", "type": "uint256" }, { "indexed": false, "internalType": "uint256", "name": "forgeTaxAmount", "type": "uint256" } ], "name": "TaxCalculation", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "account", "type": "address" }, { "indexed": false, "internalType": "bool", "name": "exempt", "type": "bool" } ], "name": "TaxExemptionUpdated", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "from", "type": "address" }, { "indexed": true, "internalType": "address", "name": "to", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "value", "type": "uint256" } ], "name": "Transfer", "type": "event" }, { "inputs": [ { "internalType": "address", "name": "owner", "type": "address" }, { "internalType": "address", "name": "spender", "type": "address" } ], "name": "allowance", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "spender", "type": "address" }, { "internalType": "uint256", "name": "value", "type": "uint256" } ], "name": "approve", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "account", "type": "address" } ], "name": "balanceOf", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "communityDistributionWallet", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "decimals", "outputs": [ { "internalType": "uint8", "name": "", "type": "uint8" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "forgeAddress", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "forgeTaxAddress", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "founderTaxAddress", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "founderTaxRate", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "", "type": "address" } ], "name": "isTaxExempt", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "name", "outputs": [ { "internalType": "string", "name": "", "type": "string" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "owner", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "pulseXRouter", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "renounceOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "account", "type": "address" }, { "internalType": "bool", "name": "exempt", "type": "bool" } ], "name": "setTaxExemption", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "symbol", "outputs": [ { "internalType": "string", "name": "", "type": "string" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "totalSupply", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "recipient", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "transfer", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "sender", "type": "address" }, { "internalType": "address", "name": "recipient", "type": "address" }, { "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "transferFrom", "outputs": [ { "internalType": "bool", "name": "", "type": "bool" } ], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "transferOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "newForgeTaxAddress", "type": "address" } ], "name": "updateForgeTaxAddress", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "newFounderTaxAddress", "type": "address" } ], "name": "updateFounderTaxAddress", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "uint256", "name": "newFounderTaxRate", "type": "uint256" } ], "name": "updateFounderTaxRate", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "newRouter", "type": "address" } ], "name": "updatePulseXRouter", "outputs": [], "stateMutability": "nonpayable", "type": "function" } ];
-    const TOKEN_DECIMALS = 18; // Confirmed by user
+    const TOKEN_DECIMALS = 18;
     const REQUIRED_TOKENS = 10000;
-    let REQUIRED_BALANCE_WEI = null; // *** CORRECTED typo, should be null ***
+    let REQUIRED_BALANCE_WEI = null;
 
     // --- Snake Game state variables ---
     const segmentSize = 20;
@@ -66,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Wallet state variables ---
     let ethersProvider = null;
-    let signer = null; // *** CORRECTED typo (let instead of Let, = added) ***
+    let signer = null;
     let userAddress = null;
     let scoreToSign = null;
     let currentUserTokenBalance = null;
@@ -74,9 +73,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Check Core Elements ---
     if (!startButton || !rulesScreen || !playButton || !gameArea || !player || !food ||
         !scoreDisplayContainer || !scoreSpan || !controlsContainer || !restartButton ||
-        !btnUp || !btnDown || !btnLeft || !btnRight || !tokenInfoSpan || !tokenBalanceSpan) {
+        !btnUp || !btnDown || !btnLeft || !btnRight || !tokenInfoSpan || !tokenBalanceSpan || !playabilityStatusDiv) { // Added playability check
         console.error("One or more required game elements are missing!");
-        document.body.innerHTML = "<h1>Error loading game elements. Please check HTML structure/IDs.</h1>";
+        document.body.innerHTML = "<h1>Error loading game elements. Please check HTML structure/IDs or dynamic creation.</h1>";
         return;
     }
 
@@ -106,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
             canPlay = true;
         }
         playButton.disabled = !canPlay;
-        if (playabilityStatusDiv) playabilityStatusDiv.textContent = message; // Ensure div exists
+        if (playabilityStatusDiv) playabilityStatusDiv.textContent = message;
         if (playabilityStatusDiv) playabilityStatusDiv.style.color = canPlay ? 'darkgreen' : 'red';
         console.log(`Check Playability: ${canPlay}, Message: "${message}"`);
         return canPlay;
@@ -128,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
      }
 
     // --- Snake Game Functions ---
-    // (No changes in these core game functions needed)
     function clearSnakeBody() { /* ... */ }
     function drawSnake() { /* ... */ }
     function createFood() { /* ... */ }
@@ -136,61 +134,43 @@ document.addEventListener('DOMContentLoaded', () => {
     function gameOver() { /* ... */ }
     function gameLoop() { /* ... */ }
     function handleDirectionChange(event) { /* ... */ }
-    function startGame() { /* ... */ } // Note: Includes checkPlayability() call
+    function startGame() { /* ... */ }
 
     // --- Wallet/Auth/Score Functions ---
     function updateSignButtonVisibility() { /* ... */ }
-    async function saveScore(finalScore) { /* ... (Corrected headers object below) ... */
-        const user = netlifyIdentity.currentUser();
-        if (user) {
-            console.log(`Attempting to save final score: ${finalScore}`);
-            try {
-                const token = await user.jwt();
-                const response = await fetch('/.netlify/functions/save-score', {
-                    method: 'POST',
-                    headers: { // *** CORRECTED Headers Syntax ***
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ score: finalScore }),
-                });
-                if (!response.ok) { const errorData = await response.json(); console.error(`Error saving score (${response.status}):`, errorData.error || 'Unknown error'); }
-                else { console.log('Score saved successfully.'); }
-            } catch (error) { console.error('Network or other error calling save-score function:', error); }
-        } else { console.log('User not logged in, score not saved.'); }
-    }
+    async function saveScore(finalScore) { /* ... */ }
     async function fetchAndDisplayLeaderboard() { /* ... */ }
 
-    // *** CORRECTED connectWallet ***
+    // *** connectWallet (No change needed from previous corrected version other than re-selecting spans) ***
     async function connectWallet() {
         if (typeof ethers === 'undefined') { console.error('Ethers.js not loaded!'); updateBalanceDisplay('Lib Err'); checkPlayability(); return; }
-        if (!REQUIRED_BALANCE_WEI) { console.error("Token configuration error."); updateBalanceDisplay('Cfg Err'); checkPlayability(); return; }
+        if (!REQUIRED_BALANCE_WEI) { console.error("Token configuration error."); updateBalanceDisplay('Cfg Err'); checkPlayability(); return;}
 
         if (typeof window.ethereum !== 'undefined') {
             console.log('MetaMask is available!');
+            // Reset display carefully
             walletStatusDiv.innerHTML = 'Connecting...<br><span class="token-info hidden">Balance: <span id="token-balance">--</span> FToken</span>';
-            // Re-select elements after innerHTML change
-            tokenInfoSpan = document.querySelector('.token-info');
-            tokenBalanceSpan = document.getElementById('token-balance');
+            tokenInfoSpan = document.querySelector('.token-info'); // Re-select potentially new elements
+            tokenBalanceSpan = document.getElementById('token-balance'); // Re-select
             currentUserTokenBalance = null;
-            checkPlayability();
+            checkPlayability(); // Shows "Checking..." message
 
             try {
                 ethersProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
                 await ethersProvider.send("eth_requestAccounts", []);
-                signer = ethersProvider.getSigner(); // *** CORRECTED Assignment ***
+                signer = ethersProvider.getSigner(); // Correct assignment
                 userAddress = await signer.getAddress();
                 console.log('Wallet connected:', userAddress);
                 const shortAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
 
-                // Update status display carefully
+                // Update status display
                 walletStatusDiv.firstChild.textContent = `Connected: `;
                 const addrSpan = document.createElement('span');
                 addrSpan.title = userAddress;
                 addrSpan.textContent = shortAddress;
                 while (walletStatusDiv.childNodes.length > 1 && walletStatusDiv.childNodes[1].nodeName !== 'BR') {
                      walletStatusDiv.removeChild(walletStatusDiv.childNodes[1]);
-                 }
+                }
                 walletStatusDiv.insertBefore(addrSpan, walletStatusDiv.childNodes[1]);
 
                 walletSectionDiv.classList.add('connected');
@@ -223,11 +203,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateSignButtonVisibility();
                 checkPlayability();
 
-            } catch (error) {
+            } catch (error) { // Catch connection errors
                 console.error('Error connecting wallet:', error); let errorMessage = 'Connection failed.';
                 if (error.code === 4001) { errorMessage = 'Connection rejected by user.'; }
                 walletStatusDiv.innerHTML = `Error: ${errorMessage}<br><span class="token-info hidden">Balance: <span id="token-balance">--</span> FToken</span>`;
-                tokenInfoSpan = document.querySelector('.token-info'); // Re-select spans
+                tokenInfoSpan = document.querySelector('.token-info'); // Re-select
                 tokenBalanceSpan = document.getElementById('token-balance');
                 ethersProvider = null; signer = null; userAddress = null; currentUserTokenBalance = null;
                 walletSectionDiv.classList.remove('connected');
@@ -237,20 +217,20 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             console.error('MetaMask (or compatible wallet) not found!');
             walletStatusDiv.innerHTML = 'Error: Wallet not found!<br><span class="token-info hidden">Balance: <span id="token-balance">--</span> FToken</span>';
-            tokenInfoSpan = document.querySelector('.token-info'); // Re-select spans
+            tokenInfoSpan = document.querySelector('.token-info'); // Re-select
             tokenBalanceSpan = document.getElementById('token-balance');
             alert('Browser wallet not detected. Please install MetaMask or a similar wallet extension!');
             checkPlayability();
         }
     }
 
+
     async function signScoreVerification() { /* ... no change ... */ }
 
     // --- Event Listeners ---
-    // (Includes restartButton listener)
     startButton.addEventListener('click', () => { startButton.classList.add('hidden'); rulesScreen.classList.remove('hidden'); checkPlayability(); });
     playButton.addEventListener('click', startGame);
-    if (restartButton) restartButton.addEventListener('click', startGame); // Check if button exists
+    if (restartButton) restartButton.addEventListener('click', startGame);
     document.addEventListener('keydown', handleDirectionChange);
     btnUp.addEventListener('click', handleDirectionChange);
     btnDown.addEventListener('click', handleDirectionChange);
