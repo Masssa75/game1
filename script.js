@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const startButton = document.getElementById('start-button');
     const rulesScreen = document.getElementById('rules-screen');
     const playButton = document.getElementById('play-button');
+    console.log('Debug: Getting playButton element:', playButton);
     const gameArea = document.getElementById('game-area');
     const player = document.getElementById('player');
     const target = document.getElementById('target');
@@ -58,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleKeyDown(event) { /* ... same code as before ... */ }
 
     // --- Function to start the game ---
-    function startGame() { /* ... same code as before ... */ }
+    function startGame() {     console.log('Debug: startGame function CALLED!'); // /* ... same code as before ... */ }
 
 
     // --- NEW: Function to Fetch and Display Leaderboard ---
@@ -102,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
          startButton.classList.add('hidden'); rulesScreen.classList.remove('hidden'); playButton.focus();
      });
     playButton.addEventListener('click', startGame);
+    console.log('Debug: Added click listener to playButton.');
     document.addEventListener('keydown', handleKeyDown);
 
     // On-Screen Button Listeners
