@@ -1,3 +1,4 @@
+// Corrected script.js
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Get references to elements ---
@@ -16,10 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnRight = document.getElementById('btn-right');
     const identityMenuPlaceholder = document.querySelector('[data-netlify-identity-menu]');
     const showLeaderboardBtn = document.getElementById('show-leaderboard-btn');
-    // Get the dialog element instead of the old div
     const leaderboardDialog = document.getElementById('leaderboard-dialog');
     const leaderboardList = document.getElementById('leaderboard-list');
-    // Get the new close button inside the dialog
     const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
 
 
@@ -31,11 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const speedFactor = 0.075; // Or your preferred speed
 
     // --- Check elements ---
-    // Updated check for new/changed leaderboard elements
     if (!startButton || !rulesScreen || !playButton || !gameArea || !player || !target ||
         !scoreDisplayContainer || !scoreSpan || !controlsContainer ||
         !btnUp || !btnDown || !btnLeft || !btnRight || !identityMenuPlaceholder ||
-        !showLeaderboardBtn || !leaderboardDialog || !leaderboardList || !closeLeaderboardBtn ) { // Check dialog and close button
+        !showLeaderboardBtn || !leaderboardDialog || !leaderboardList || !closeLeaderboardBtn ) {
         console.error("One or more required game elements are missing!");
         document.body.innerHTML = "<h1>Error loading game elements. Please check HTML structure/IDs.</h1>";
         return;
@@ -125,8 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
             switch (event.key) {
                 case "ArrowUp":    movePlayer('up');    break;
                 case "ArrowDown":  movePlayer('down');  break;
-                case "Left":  movePlayer('left');  break; // Corrected: ArrowLeft
-                case "Right": movePlayer('right'); break; // Corrected: ArrowRight
+                // --- CORRECTED LINES ---
+                case "ArrowLeft":  movePlayer('left');  break;
+                case "ArrowRight": movePlayer('right'); break;
+                // --- END OF CORRECTION ---
             }
         }
     }
@@ -147,9 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Function to Fetch and Display Leaderboard ---
     async function fetchAndDisplayLeaderboard() {
         leaderboardList.innerHTML = '<li>Loading...</li>';
-        // Use showModal() to open the dialog
         leaderboardDialog.showModal();
-
         try {
             const response = await fetch('/.netlify/functions/get-leaderboard');
             if (!response.ok) {
@@ -190,15 +188,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Leaderboard Button Listener
     showLeaderboardBtn.addEventListener('click', fetchAndDisplayLeaderboard);
 
-    // NEW: Close Leaderboard Button Listener
+    // Close Leaderboard Button Listener
     closeLeaderboardBtn.addEventListener('click', () => {
-        leaderboardDialog.close(); // Use built-in dialog close method
+        leaderboardDialog.close();
     });
 
     // Optional: Close dialog if user clicks outside on the backdrop
     leaderboardDialog.addEventListener('click', (event) => {
-       // Check if the click was directly on the dialog backdrop
-       // This uses getBoundingClientRect which is one way to check if click is outside content
        const rect = leaderboardDialog.getBoundingClientRect();
        const isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height
          && rect.left <= event.clientX && event.clientX <= rect.left + rect.width);
@@ -206,6 +202,5 @@ document.addEventListener('DOMContentLoaded', () => {
          leaderboardDialog.close();
        }
      });
-
 
 }); // End of DOMContentLoaded listener
