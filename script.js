@@ -1,4 +1,4 @@
-// script.js - Snake Game Step 5: Token Holding Requirement Check (Corrected Const Assignment)
+// script.js - Snake Game Step 5: Token Holding Requirement Check (Debug Logs Added)
 /* global ethers, netlifyIdentity */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -28,9 +28,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const walletStatusDiv = document.getElementById('wallet-status');
     const walletSectionDiv = document.getElementById('wallet-section');
     const signScoreBtn = document.getElementById('sign-score-btn');
-    // --- New Token Info Elements (Using LET instead of CONST) ---
-    let tokenInfoSpan = document.querySelector('.token-info');   // *** CHANGED to let ***
-    let tokenBalanceSpan = document.getElementById('token-balance'); // *** CHANGED to let ***
+    // --- New Token Info Elements ---
+    let tokenInfoSpan = document.querySelector('.token-info');
+    let tokenBalanceSpan = document.getElementById('token-balance');
     // --- Create status div dynamically ---
     const playabilityStatusDiv = document.createElement('div');
     playabilityStatusDiv.setAttribute('id', 'playability-status');
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Check Core Elements ---
     if (!startButton || !rulesScreen || !playButton || !gameArea || !player || !food ||
         !scoreDisplayContainer || !scoreSpan || !controlsContainer || !restartButton ||
-        !btnUp || !btnDown || !btnLeft || !btnRight || !tokenInfoSpan || !tokenBalanceSpan || !playabilityStatusDiv) { // Added playability check
+        !btnUp || !btnDown || !btnLeft || !btnRight || !tokenInfoSpan || !tokenBalanceSpan || !playabilityStatusDiv) {
         console.error("One or more required game elements are missing!");
         document.body.innerHTML = "<h1>Error loading game elements. Please check HTML structure/IDs or dynamic creation.</h1>";
         return;
@@ -134,98 +134,58 @@ document.addEventListener('DOMContentLoaded', () => {
     function gameOver() { /* ... */ }
     function gameLoop() { /* ... */ }
     function handleDirectionChange(event) { /* ... */ }
-    function startGame() { /* ... */ }
+
+    // --- START GAME Function with DEBUG LOGS ---
+    function startGame() {
+        // *** DEBUG LOG 1 ***
+        console.log("Play Now button clicked, startGame entered.");
+
+        // Check playability BEFORE starting
+        if (!checkPlayability()) {
+            console.warn("Start game blocked INSIDE startGame: Requirements not met."); // Added log here too
+            // Optional: Briefly highlight the status message
+             if (playabilityStatusDiv) {
+                playabilityStatusDiv.style.transition = 'opacity 0.1s ease-in-out';
+                playabilityStatusDiv.style.opacity = '0.5';
+                setTimeout(() => { playabilityStatusDiv.style.opacity = '1'; }, 100);
+            }
+            return; // Stop the game from starting
+        }
+
+        // *** DEBUG LOG 2 ***
+        console.log("Playability check passed in startGame. Initializing game...");
+
+
+        // --- Rest of the startGame function ---
+        if (gameLoopIntervalId) { clearInterval(gameLoopIntervalId); }
+        isGameActive = true;
+        score = 0; scoreSpan.textContent = score;
+        snake = [ { x: segmentSize * 4, y: segmentSize }, { x: segmentSize * 3, y: segmentSize }, { x: segmentSize * 2, y: segmentSize } ];
+        dx = segmentSize; dy = 0;
+        changingDirection = false;
+        currentGameSpeed = baseGameSpeed;
+        clearSnakeBody();
+        rulesScreen.classList.add('hidden');
+        gameArea.classList.remove('hidden');
+        scoreDisplayContainer.classList.remove('hidden');
+        controlsContainer.classList.remove('hidden');
+        player.classList.remove('hidden');
+        food.classList.remove('hidden');
+        if (restartButton) restartButton.classList.add('hidden');
+        updateSignButtonVisibility();
+        drawSnake();
+        createFood();
+        gameLoopIntervalId = setInterval(gameLoop, currentGameSpeed);
+    }
+    // --- END OF startGame Function ---
+
 
     // --- Wallet/Auth/Score Functions ---
     function updateSignButtonVisibility() { /* ... */ }
     async function saveScore(finalScore) { /* ... */ }
     async function fetchAndDisplayLeaderboard() { /* ... */ }
-
-    // *** connectWallet (No change needed from previous corrected version other than re-selecting spans) ***
-    async function connectWallet() {
-        if (typeof ethers === 'undefined') { console.error('Ethers.js not loaded!'); updateBalanceDisplay('Lib Err'); checkPlayability(); return; }
-        if (!REQUIRED_BALANCE_WEI) { console.error("Token configuration error."); updateBalanceDisplay('Cfg Err'); checkPlayability(); return;}
-
-        if (typeof window.ethereum !== 'undefined') {
-            console.log('MetaMask is available!');
-            // Reset display carefully
-            walletStatusDiv.innerHTML = 'Connecting...<br><span class="token-info hidden">Balance: <span id="token-balance">--</span> FToken</span>';
-            tokenInfoSpan = document.querySelector('.token-info'); // Re-select potentially new elements
-            tokenBalanceSpan = document.getElementById('token-balance'); // Re-select
-            currentUserTokenBalance = null;
-            checkPlayability(); // Shows "Checking..." message
-
-            try {
-                ethersProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
-                await ethersProvider.send("eth_requestAccounts", []);
-                signer = ethersProvider.getSigner(); // Correct assignment
-                userAddress = await signer.getAddress();
-                console.log('Wallet connected:', userAddress);
-                const shortAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-
-                // Update status display
-                walletStatusDiv.firstChild.textContent = `Connected: `;
-                const addrSpan = document.createElement('span');
-                addrSpan.title = userAddress;
-                addrSpan.textContent = shortAddress;
-                while (walletStatusDiv.childNodes.length > 1 && walletStatusDiv.childNodes[1].nodeName !== 'BR') {
-                     walletStatusDiv.removeChild(walletStatusDiv.childNodes[1]);
-                }
-                walletStatusDiv.insertBefore(addrSpan, walletStatusDiv.childNodes[1]);
-
-                walletSectionDiv.classList.add('connected');
-
-                // Fetch Token Balance
-                console.log(`Workspaceing balance for ${userAddress} from ${TOKEN_CONTRACT_ADDRESS}`);
-                if (tokenInfoSpan) tokenInfoSpan.classList.remove('hidden');
-                updateBalanceDisplay('Loading...');
-
-                try {
-                    const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_ABI, signer);
-                    const network = await ethersProvider.getNetwork();
-                    if (network.chainId !== 369) {
-                        console.warn(`Connected to wrong network: ${network.name} (${network.chainId}). Please switch to PulseChain.`);
-                        updateBalanceDisplay('Wrong Network');
-                        currentUserTokenBalance = ethers.BigNumber.from(0);
-                    } else {
-                        const balanceWei = await tokenContract.balanceOf(userAddress);
-                        currentUserTokenBalance = balanceWei;
-                        console.log(`Token Balance (Wei): ${balanceWei.toString()}`);
-                        const formattedBalance = ethers.utils.formatUnits(balanceWei, TOKEN_DECIMALS);
-                        console.log(`Token Balance (Formatted): ${formattedBalance}`);
-                        updateBalanceDisplay(parseFloat(formattedBalance).toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0}));
-                    }
-                } catch (contractError) {
-                    console.error("Error fetching token balance:", contractError);
-                    currentUserTokenBalance = null;
-                    updateBalanceDisplay("Error");
-                }
-                updateSignButtonVisibility();
-                checkPlayability();
-
-            } catch (error) { // Catch connection errors
-                console.error('Error connecting wallet:', error); let errorMessage = 'Connection failed.';
-                if (error.code === 4001) { errorMessage = 'Connection rejected by user.'; }
-                walletStatusDiv.innerHTML = `Error: ${errorMessage}<br><span class="token-info hidden">Balance: <span id="token-balance">--</span> FToken</span>`;
-                tokenInfoSpan = document.querySelector('.token-info'); // Re-select
-                tokenBalanceSpan = document.getElementById('token-balance');
-                ethersProvider = null; signer = null; userAddress = null; currentUserTokenBalance = null;
-                walletSectionDiv.classList.remove('connected');
-                updateSignButtonVisibility();
-                checkPlayability();
-            }
-        } else {
-            console.error('MetaMask (or compatible wallet) not found!');
-            walletStatusDiv.innerHTML = 'Error: Wallet not found!<br><span class="token-info hidden">Balance: <span id="token-balance">--</span> FToken</span>';
-            tokenInfoSpan = document.querySelector('.token-info'); // Re-select
-            tokenBalanceSpan = document.getElementById('token-balance');
-            alert('Browser wallet not detected. Please install MetaMask or a similar wallet extension!');
-            checkPlayability();
-        }
-    }
-
-
-    async function signScoreVerification() { /* ... no change ... */ }
+    async function connectWallet() { /* ... */ }
+    async function signScoreVerification() { /* ... */ }
 
     // --- Event Listeners ---
     startButton.addEventListener('click', () => { startButton.classList.add('hidden'); rulesScreen.classList.remove('hidden'); checkPlayability(); });
