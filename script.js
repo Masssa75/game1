@@ -1,4 +1,4 @@
-// script.js - Snake Game (Corrected Scope Issues, Updated saveScore)
+// script.js - Snake Game (Full version with Claim Button Eligibility Logic)
 /* global ethers, netlifyIdentity */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rulesScreen = document.getElementById('rules-screen');
     const playButton = document.getElementById('play-button');
     const gameArea = document.getElementById('game-area');
-    const player = document.getElementById('player'); // Snake Head
+    const player = document.getElementById('player');
     const food = document.getElementById('food');
     const scoreDisplayContainer = document.getElementById('score-display');
     const scoreSpan = document.getElementById('score');
@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const walletStatusDiv = document.getElementById('wallet-status');
     const walletSectionDiv = document.getElementById('wallet-section');
     const signScoreBtn = document.getElementById('sign-score-btn');
+    const claimPrizeBtn = document.getElementById('claim-prize-btn'); // Added
     let tokenInfoSpan = document.querySelector('.token-info');
     let tokenBalanceSpan = document.getElementById('token-balance');
     const playabilityStatusDiv = document.createElement('div');
@@ -37,9 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
     playabilityStatusDiv.style.minHeight = '1.2em';
     if (rulesScreen && rulesScreen.parentNode) {
        rulesScreen.parentNode.insertBefore(playabilityStatusDiv, rulesScreen.nextSibling);
-    } else {
-       console.error("Could not find rulesScreen parent to insert playability status.");
-    }
+    } else { console.error("Could not find rulesScreen parent to insert playability status."); }
 
     // --- Constants and State Variables ---
     const TOKEN_CONTRACT_ADDRESS = "0x3Aa2BAbD88056a6bA995056B6e139C42411b068E";
@@ -68,18 +67,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let userAddress = null;
     let scoreToSign = null;
     let currentUserTokenBalance = null;
+    let currentLeaderboardData = null; // Added
 
     // --- Check Core Elements ---
-    // (Check remains the same)
-    if (!startButton || !rulesScreen || !playButton || !gameArea || !player || !food || !scoreDisplayContainer || !scoreSpan || !controlsContainer || !restartButton || !btnUp || !btnDown || !btnLeft || !btnRight || !tokenInfoSpan || !tokenBalanceSpan || !playabilityStatusDiv || !showLeaderboardBtn || !leaderboardDialog || !leaderboardList || !closeLeaderboardBtn || !connectWalletBtn || !walletStatusDiv || !walletSectionDiv || !signScoreBtn) {
+    if (!startButton || !rulesScreen || !playButton || !gameArea || !player || !food || !scoreDisplayContainer || !scoreSpan || !controlsContainer || !restartButton || !btnUp || !btnDown || !btnLeft || !btnRight || !tokenInfoSpan || !tokenBalanceSpan || !playabilityStatusDiv || !showLeaderboardBtn || !leaderboardDialog || !leaderboardList || !closeLeaderboardBtn || !connectWalletBtn || !walletStatusDiv || !walletSectionDiv || !signScoreBtn || !claimPrizeBtn /* Added */ ) {
         console.error("CRITICAL: One or more required game elements are missing from the DOM!");
         document.body.innerHTML = "<h1>Error: Game initialization failed. Required elements not found.</h1>";
         return;
     }
 
-
     // --- Utility & Helper Functions ---
-
     function updateBalanceDisplay(displayValue) {
         if (tokenBalanceSpan && tokenInfoSpan) {
             tokenBalanceSpan.textContent = displayValue;
@@ -89,33 +86,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Calculate REQUIRED_BALANCE_WEI
-    if (typeof ethers !== 'undefined') {
-        try {
-            REQUIRED_BALANCE_WEI = ethers.utils.parseUnits(REQUIRED_TOKENS.toString(), TOKEN_DECIMALS);
-        } catch (e) {
-            console.error("Error calculating required balance.", e);
-            if (playabilityStatusDiv) playabilityStatusDiv.textContent = "Error: Invalid token configuration.";
-            if (playButton) playButton.disabled = true;
-        }
-    } else {
-         console.error("Ethers.js not loaded, cannot initialize required balance.");
-         if (playabilityStatusDiv) playabilityStatusDiv.textContent = "Error: Wallet library failed to load.";
-         if (playButton) playButton.disabled = true;
-    }
+    if (typeof ethers !== 'undefined') { try { REQUIRED_BALANCE_WEI = ethers.utils.parseUnits(REQUIRED_TOKENS.toString(), TOKEN_DECIMALS); } catch (e) { console.error("Error calculating required balance.", e); if (playabilityStatusDiv) playabilityStatusDiv.textContent = "Error: Invalid token configuration."; if (playButton) playButton.disabled = true; } } else { console.error("Ethers.js not loaded..."); if (playabilityStatusDiv) playabilityStatusDiv.textContent = "Error: Wallet library failed to load."; if (playButton) playButton.disabled = true; }
 
-    // --- All functions defined within this scope ---
+    // --- Function Definitions ---
 
     function checkPlayability() {
         let canPlay = false;
         let message = "";
         if (!REQUIRED_BALANCE_WEI) {
              message = "Error: Token configuration failed.";
-             console.error("Cannot check playability: REQUIRED_BALANCE_WEI not calculated.");
-        } else if (!signer) { // Check if signer is set (implies wallet connected and correct network)
+             // console.error("Cannot check playability: REQUIRED_BALANCE_WEI not calculated."); // Keep error console log? Maybe.
+        } else if (!signer) {
             message = "Connect wallet with PulseChain network to check token balance.";
         } else if (currentUserTokenBalance === null) {
-             // This might happen briefly during connection or if balance fetch failed
             message = "Checking token balance...";
         } else if (currentUserTokenBalance.lt(REQUIRED_BALANCE_WEI)) {
             const requiredFormatted = ethers.utils.formatUnits(REQUIRED_BALANCE_WEI, TOKEN_DECIMALS);
@@ -125,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             message = `Holding requirement met! (${Number(requiredFormatted).toLocaleString()}+ Tokens)`;
             canPlay = true;
         }
-        playButton.disabled = !canPlay;
+        if(playButton) playButton.disabled = !canPlay; // Check button exists
         if (playabilityStatusDiv) {
             playabilityStatusDiv.textContent = message;
             playabilityStatusDiv.style.color = canPlay ? 'darkgreen' : 'red';
@@ -140,40 +123,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function drawSnake() {
         if (!snake || snake.length === 0) return;
-        player.style.left = snake[0].x + 'px';
-        player.style.top = snake[0].y + 'px';
+        if(player){ // Check element exists
+             player.style.left = snake[0].x + 'px';
+             player.style.top = snake[0].y + 'px';
+        }
         clearSnakeBody();
         for (let i = 1; i < snake.length; i++) {
             const segmentDiv = document.createElement('div');
             segmentDiv.classList.add('snake-segment');
             segmentDiv.style.left = snake[i].x + 'px';
             segmentDiv.style.top = snake[i].y + 'px';
-            gameArea.appendChild(segmentDiv);
+            if(gameArea) gameArea.appendChild(segmentDiv); // Check element exists
         }
     }
 
     function createFood() {
+        if (!gameArea || !food) return; // Check elements exist
         const maxX = gameArea.clientWidth - segmentSize;
         const maxY = gameArea.clientHeight - segmentSize;
+        if (maxX < 0 || maxY < 0) return; // Avoid errors if gameArea has no size yet
+
         let foodPlaced = false;
-        while (!foodPlaced) {
+        let attempts = 0; // Prevent infinite loop
+        while (!foodPlaced && attempts < 100) {
             foodX = Math.floor(Math.random() * (maxX / segmentSize)) * segmentSize;
             foodY = Math.floor(Math.random() * (maxY / segmentSize)) * segmentSize;
             let collision = false;
-            for (const segment of snake) {
-                if (segment.x === foodX && segment.y === foodY) {
-                    collision = true;
-                    break;
-                }
+            if(snake) { // Check snake exists
+                 for (const segment of snake) {
+                     if (segment.x === foodX && segment.y === foodY) {
+                         collision = true;
+                         break;
+                     }
+                 }
             }
             if (!collision) foodPlaced = true;
+            attempts++;
         }
+        // If loop fails, place at default or log error? For now, just position it.
         food.style.left = foodX + 'px';
         food.style.top = foodY + 'px';
     }
 
     function moveSnake() {
-        if (!snake || snake.length === 0) return; // Safety check
+        if (!snake || snake.length === 0 || !gameArea) return; // Safety check
         const head = { x: snake[0].x + dx, y: snake[0].y + dy };
         const hitLeftWall = head.x < 0;
         const hitRightWall = head.x >= gameArea.clientWidth;
@@ -190,10 +183,12 @@ document.addEventListener('DOMContentLoaded', () => {
         snake.unshift(head);
         const didEatFood = snake[0].x === foodX && snake[0].y === foodY;
         if (didEatFood) {
-            score += 1; scoreSpan.textContent = score; scoreToSign = score;
+            score += 1;
+            if(scoreSpan) scoreSpan.textContent = score; // Check element exists
+            scoreToSign = score;
             if (score > 0 && score % speedIncreaseInterval === 0) {
                 currentGameSpeed = Math.max(minGameSpeed, currentGameSpeed - speedIncreaseAmount);
-                clearInterval(gameLoopIntervalId);
+                if(gameLoopIntervalId) clearInterval(gameLoopIntervalId); // Check exists
                 gameLoopIntervalId = setInterval(gameLoop, currentGameSpeed);
             }
             createFood();
@@ -205,21 +200,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function gameOver() {
         if (!isGameActive) return;
         isGameActive = false;
-        clearInterval(gameLoopIntervalId); gameLoopIntervalId = null;
+        if(gameLoopIntervalId) clearInterval(gameLoopIntervalId); gameLoopIntervalId = null;
         if (restartButton) restartButton.classList.remove('hidden');
         const currentUser = netlifyIdentity.currentUser();
         if (currentUser) {
-            saveScore(score); // Call saveScore directly
+            saveScore(score);
         }
-        updateSignButtonVisibility(); // Call updateSignButtonVisibility directly
+        updateSignButtonVisibility();
     }
 
     function gameLoop() {
         if (!isGameActive) return;
         changingDirection = false;
-        moveSnake(); // Call moveSnake directly
+        moveSnake();
         if (isGameActive) { // Check again as moveSnake might call gameOver
-            drawSnake(); // Call drawSnake directly
+            drawSnake();
         }
     }
 
@@ -247,46 +242,48 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function startGame() {
-        if (!checkPlayability()) { // Call checkPlayability directly
-            if (playabilityStatusDiv){ // Check if div exists before using
+        if (!checkPlayability()) {
+            if (playabilityStatusDiv){
                  playabilityStatusDiv.textContent = "Cannot start game. Check wallet connection and token balance.";
                  playabilityStatusDiv.style.color = 'red';
             }
             return;
         }
-        isGameActive = true; score = 0; scoreToSign = null; scoreSpan.textContent = score; currentGameSpeed = baseGameSpeed;
+        isGameActive = true; score = 0; scoreToSign = null;
+        if(scoreSpan) scoreSpan.textContent = score;
+        currentGameSpeed = baseGameSpeed;
         snake = [ { x: segmentSize * 4, y: segmentSize }, { x: segmentSize * 3, y: segmentSize }, { x: segmentSize * 2, y: segmentSize } ];
         dx = segmentSize; dy = 0; changingDirection = false;
         if (gameLoopIntervalId) { clearInterval(gameLoopIntervalId); gameLoopIntervalId = null; }
-        clearSnakeBody(); // Call clearSnakeBody directly
-        rulesScreen.classList.add('hidden');
-        if (playabilityStatusDiv) playabilityStatusDiv.textContent = ''; // Clear status
-        gameArea.classList.remove('hidden'); scoreDisplayContainer.classList.remove('hidden'); controlsContainer.classList.remove('hidden');
-        player.classList.remove('hidden'); food.classList.remove('hidden');
+        clearSnakeBody();
+        if(rulesScreen) rulesScreen.classList.add('hidden');
+        if (playabilityStatusDiv) playabilityStatusDiv.textContent = '';
+        if(gameArea) gameArea.classList.remove('hidden');
+        if(scoreDisplayContainer) scoreDisplayContainer.classList.remove('hidden');
+        if(controlsContainer) controlsContainer.classList.remove('hidden');
+        if(player) player.classList.remove('hidden');
+        if(food) food.classList.remove('hidden');
         if (restartButton) restartButton.classList.add('hidden');
-        if (signScoreBtn) signScoreBtn.classList.add('hidden'); // Check if exists
-        drawSnake(); createFood(); // Call directly
-        gameArea.focus();
-        gameLoopIntervalId = setInterval(gameLoop, currentGameSpeed); // Call gameLoop directly
+        if (signScoreBtn) signScoreBtn.classList.add('hidden');
+        if (claimPrizeBtn) claimPrizeBtn.classList.add('hidden'); // Hide claim button on start
+        drawSnake(); createFood();
+        if(gameArea) gameArea.focus(); // Check element exists
+        gameLoopIntervalId = setInterval(gameLoop, currentGameSpeed);
     }
 
     function updateSignButtonVisibility() {
         const user = netlifyIdentity.currentUser();
-        // Use state variables directly (signer, scoreToSign, isGameActive)
         const canSign = user && signer && scoreToSign !== null && scoreToSign > 0 && !isGameActive;
         if (signScoreBtn) {
             signScoreBtn.classList.toggle('hidden', !canSign);
              if (canSign) { signScoreBtn.textContent = `Sign Last Score (${scoreToSign})`; }
-        } else {
-            // This case should have been caught by the initial element check
-            // console.error("Sign Score button not found (in updateSignButtonVisibility).");
         }
     }
 
     async function saveScore(finalScore) {
         const user = netlifyIdentity.currentUser();
         if (!user) { return; }
-        if (!userAddress) { // Use userAddress directly
+        if (!userAddress) {
              console.error("Cannot save score: Wallet address not found (userAddress is null).");
              return;
         }
@@ -295,10 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/.netlify/functions/save-score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ score: finalScore, wallet_address: userAddress }) // Use userAddress directly
+                body: JSON.stringify({ score: finalScore, wallet_address: userAddress })
             });
-            const result = await response.json();
+            // Only log errors, assume success otherwise unless specific feedback needed
             if (!response.ok) {
+                 const result = await response.json().catch(() => ({})); // Attempt to parse error
                 console.error('Error saving score:', response.status, result.error || response.statusText);
             }
         } catch (error) {
@@ -306,91 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function fetchAndDisplayLeaderboard() {
-        if(!leaderboardList) { console.error("Leaderboard list element not found."); return; } // Add check
-        leaderboardList.innerHTML = '<li>Loading...</li>';
-        if (leaderboardDialog && !leaderboardDialog.open) {
-            leaderboardDialog.showModal();
-        } else if (!leaderboardDialog) {
-            console.error("Leaderboard dialog element not found!");
-            return;
-        }
-         try {
-             const response = await fetch('/.netlify/functions/get-leaderboard');
-             if (!response.ok) {
-                 const errorData = await response.json().catch(() => ({ error: `HTTP error ${response.status}` }));
-                 throw new Error(`Leaderboard fetch failed: ${errorData.error || response.statusText}`);
-             }
-             const leaderboardData = await response.json();
-             leaderboardList.innerHTML = ''; // Clear loading
-             if (leaderboardData && leaderboardData.length > 0) {
-                 leaderboardData.forEach(entry => {
-                     const li = document.createElement('li');
-                     const email = entry.user_email;
-                     const maskedEmail = email ? `${email.substring(0, Math.min(3, email.indexOf('@')))}***@${email.split('@')[1] || 'domain.com'}` : 'Anonymous';
-                     li.textContent = `${maskedEmail}: ${entry.score}`;
-                     leaderboardList.appendChild(li);
-                 });
-             } else {
-                 leaderboardList.innerHTML = '<li>Leaderboard is empty.</li>';
-             }
-         } catch (error) {
-             console.error("Error fetching or displaying leaderboard:", error);
-             if(leaderboardList) leaderboardList.innerHTML = `<li>Error loading leaderboard: ${error.message}</li>`;
-         }
-    }
-
-    async function connectWallet() {
-        if (typeof window.ethereum === 'undefined') {
-            if(walletStatusDiv) walletStatusDiv.textContent = 'Status: MetaMask not detected!';
-            return;
-        }
-        if(walletStatusDiv) walletStatusDiv.textContent = 'Status: Connecting...';
-        try {
-            // Use state variables directly (ethersProvider, signer, userAddress, etc.)
-            ethersProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
-            await ethersProvider.send("eth_requestAccounts", []);
-            signer = ethersProvider.getSigner();
-            userAddress = await signer.getAddress();
-            const network = await ethersProvider.getNetwork();
-            if (network.chainId !== PULSECHAIN_ID) {
-                 if(walletStatusDiv) walletStatusDiv.innerHTML = `Status: Wrong Network! Please switch to PulseChain (ID: ${PULSECHAIN_ID}).<br/>Connected: ${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-                 if(walletSectionDiv) walletSectionDiv.classList.add('connected');
-                 // Reset state for incorrect network
-                 currentUserTokenBalance = null; ethersProvider = null; signer = null;
-                 updateBalanceDisplay('--'); checkPlayability(); updateSignButtonVisibility();
-                 return;
-            }
-            const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_ABI, signer);
-            currentUserTokenBalance = await tokenContract.balanceOf(userAddress);
-            const balanceFormatted = ethers.utils.formatUnits(currentUserTokenBalance, TOKEN_DECIMALS);
-            const displayBalance = parseFloat(balanceFormatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            if(walletStatusDiv) walletStatusDiv.innerHTML = `Status: Connected (PulseChain)<br/>Address: ${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-            if(walletSectionDiv) walletSectionDiv.classList.add('connected');
-            updateBalanceDisplay(displayBalance);
-            checkPlayability();
-            updateSignButtonVisibility();
-             // Add listeners if provider exists
-             if (ethersProvider) {
-                 ethersProvider.on("network", (newNetwork, oldNetwork) => { if (oldNetwork) { window.location.reload(); } });
-             }
-             if (window.ethereum) { // Check ethereum exists before adding listener
-                 window.ethereum.on('accountsChanged', (accounts) => { window.location.reload(); });
-             }
-        } catch (error) {
-            console.error("Wallet connection error:", error);
-            if(walletStatusDiv) walletStatusDiv.textContent = `Status: Connection failed: ${error.message.substring(0, 50)}...`;
-             // Reset state on error
-            ethersProvider = null; signer = null; userAddress = null; currentUserTokenBalance = null;
-            if(walletSectionDiv) walletSectionDiv.classList.remove('connected');
-            updateBalanceDisplay('--');
-            checkPlayability();
-            updateSignButtonVisibility();
-        }
-    }
-
     async function signScoreVerification() {
-        // Use state variables directly (signer, scoreToSign)
         if (!signer) { alert("Wallet not connected."); return; }
         if (scoreToSign === null || scoreToSign <= 0) { alert("No valid score to sign."); return; }
         const message = `Verifying my score in Snake Game: ${scoreToSign} points.`;
@@ -403,8 +317,116 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- Functions Added/Modified for Claim Logic ---
+
+    function checkClaimEligibility() {
+        let isEligible = false;
+        if (userAddress && currentLeaderboardData) {
+            for (let i = 0; i < Math.min(currentLeaderboardData.length, 5); i++) {
+                const entry = currentLeaderboardData[i];
+                if (entry.wallet_address && entry.wallet_address.toLowerCase() === userAddress.toLowerCase()) {
+                    isEligible = true;
+                    break;
+                }
+            }
+        }
+        // TODO: Add re-claim check later
+        if (claimPrizeBtn) {
+            claimPrizeBtn.classList.toggle('hidden', !isEligible);
+        }
+    }
+
+    async function handleClaimPrize() {
+        console.log("Claim Prize button clicked!"); // Keep log for this action
+        alert("Claim functionality not yet implemented.\nNeed Smart Contract address and ABI.");
+        // TODO: Implement contract call and re-claim prevention
+    }
+
+    async function fetchAndDisplayLeaderboard() {
+        if(!leaderboardList) { console.error("Leaderboard list element not found."); return; }
+        leaderboardList.innerHTML = '<li>Loading...</li>';
+        if (claimPrizeBtn) claimPrizeBtn.classList.add('hidden'); // Hide while fetching
+
+        if (leaderboardDialog && !leaderboardDialog.open) {
+            leaderboardDialog.showModal();
+        } else if (!leaderboardDialog) { console.error("Leaderboard dialog element not found!"); return; }
+
+         try {
+             const response = await fetch('/.netlify/functions/get-leaderboard');
+             if (!response.ok) {
+                 const errorData = await response.json().catch(() => ({ error: `HTTP error ${response.status}` }));
+                 throw new Error(`Leaderboard fetch failed: ${errorData.error || response.statusText}`);
+             }
+             const data = await response.json();
+             currentLeaderboardData = data; // Store data
+
+             leaderboardList.innerHTML = '';
+             if (currentLeaderboardData && currentLeaderboardData.length > 0) {
+                 currentLeaderboardData.forEach(entry => {
+                     const li = document.createElement('li');
+                     const email = entry.user_email;
+                     const maskedEmail = email ? `${email.substring(0, Math.min(3, email.indexOf('@')))}***@${email.split('@')[1] || 'domain.com'}` : 'Anonymous';
+                     li.textContent = `${maskedEmail}: ${entry.score}`;
+                     leaderboardList.appendChild(li);
+                 });
+             } else {
+                 leaderboardList.innerHTML = '<li>Leaderboard is empty.</li>';
+             }
+             checkClaimEligibility(); // Check eligibility after fetch success
+         } catch (error) {
+             console.error("Error fetching or displaying leaderboard:", error);
+             if(leaderboardList) leaderboardList.innerHTML = `<li>Error loading leaderboard: ${error.message}</li>`;
+             currentLeaderboardData = null; // Reset on error
+             checkClaimEligibility(); // Ensure button is hidden on error
+         }
+    }
+
+    async function connectWallet() {
+        if (typeof window.ethereum === 'undefined') {
+            if(walletStatusDiv) walletStatusDiv.textContent = 'Status: MetaMask not detected!';
+            return;
+         }
+        if(walletStatusDiv) walletStatusDiv.textContent = 'Status: Connecting...';
+        if (claimPrizeBtn) claimPrizeBtn.classList.add('hidden'); // Hide while connecting
+        try {
+            ethersProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
+            await ethersProvider.send("eth_requestAccounts", []);
+            signer = ethersProvider.getSigner();
+            userAddress = await signer.getAddress();
+            const network = await ethersProvider.getNetwork();
+
+            if (network.chainId !== PULSECHAIN_ID) {
+                 if(walletStatusDiv) walletStatusDiv.innerHTML = `Status: Wrong Network! Please switch to PulseChain (ID: ${PULSECHAIN_ID}).<br/>Connected: ${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+                 if(walletSectionDiv) walletSectionDiv.classList.add('connected');
+                 currentUserTokenBalance = null; ethersProvider = null; signer = null; userAddress = null;
+                 updateBalanceDisplay('--'); checkPlayability(); updateSignButtonVisibility();
+                 checkClaimEligibility(); // Hide button
+                 return;
+            }
+            const tokenContract = new ethers.Contract(TOKEN_CONTRACT_ADDRESS, TOKEN_ABI, signer);
+            currentUserTokenBalance = await tokenContract.balanceOf(userAddress);
+            const balanceFormatted = ethers.utils.formatUnits(currentUserTokenBalance, TOKEN_DECIMALS);
+            const displayBalance = parseFloat(balanceFormatted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if(walletStatusDiv) walletStatusDiv.innerHTML = `Status: Connected (PulseChain)<br/>Address: ${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+            if(walletSectionDiv) walletSectionDiv.classList.add('connected');
+            updateBalanceDisplay(displayBalance);
+            checkPlayability();
+            updateSignButtonVisibility();
+            checkClaimEligibility(); // Check eligibility after connection
+
+             if (ethersProvider) { ethersProvider.on("network", (newNetwork, oldNetwork) => { if (oldNetwork) { window.location.reload(); } }); }
+             if (window.ethereum) { window.ethereum.on('accountsChanged', (accounts) => { window.location.reload(); }); }
+        } catch (error) {
+            console.error("Wallet connection error:", error);
+            if(walletStatusDiv) walletStatusDiv.textContent = `Status: Connection failed: ${error.message.substring(0, 50)}...`;
+            ethersProvider = null; signer = null; userAddress = null; currentUserTokenBalance = null;
+            if(walletSectionDiv) walletSectionDiv.classList.remove('connected');
+            updateBalanceDisplay('--'); checkPlayability(); updateSignButtonVisibility();
+            checkClaimEligibility(); // Hide button
+        }
+    }
+
     // --- Event Listeners Setup ---
-    // Assign listeners directly using the function names defined above
     if(startButton) startButton.addEventListener('click', () => {
         startButton.classList.add('hidden');
         if(rulesScreen) rulesScreen.classList.remove('hidden');
@@ -426,32 +448,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     if (connectWalletBtn) connectWalletBtn.addEventListener('click', connectWallet);
     if (signScoreBtn) signScoreBtn.addEventListener('click', signScoreVerification);
-
-    // Netlify Identity listeners
-    if (window.netlifyIdentity) {
-      // Initialize only once
-      netlifyIdentity.on('init', user => {
-        updateSignButtonVisibility();
-        // Optional: Handle initial login state if needed
-      });
-      netlifyIdentity.on('login', user => {
-        updateSignButtonVisibility();
-      });
-      netlifyIdentity.on('logout', () => {
-        updateSignButtonVisibility();
-      });
-      // Deprecated redirect logic removed unless specifically needed
-      // window.netlifyIdentity.on("init", user => {
-      //   if (!user) {
-      //     window.netlifyIdentity.on("login", () => { document.location.href = "/"; });
-      //   }
-      // });
-    } else {
-         console.warn("Netlify Identity widget not found during listener setup.");
+    if (claimPrizeBtn) { // Added listener
+        claimPrizeBtn.addEventListener('click', handleClaimPrize);
     }
 
-    // Initial check on page load
-    checkPlayability();
+    // Netlify Identity listeners...
+    if (window.netlifyIdentity) {
+      netlifyIdentity.on('init', user => { updateSignButtonVisibility(); }); // Keep sign button logic tied to identity
+      netlifyIdentity.on('login', user => { updateSignButtonVisibility(); });
+      netlifyIdentity.on('logout', () => { updateSignButtonVisibility(); });
+    } else { console.warn("Netlify Identity widget not found..."); }
 
+    // Initial check on page load
+    checkPlayability(); // Check if user can play
+    // Don't check claim eligibility until wallet connects or leaderboard is fetched
 
 }); // <<< --- End of DOMContentLoaded listener --- >>>

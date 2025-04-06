@@ -11,12 +11,14 @@
 <body>
     <h1>Snake Game</h1>
     <div data-netlify-identity-menu></div>
+
     <div id="wallet-section">
         <button id="connect-wallet-btn">Connect Wallet</button>
         <div id="wallet-status">
             Status: Not Connected
             <br> <span class="token-info hidden"> Balance: <span id="token-balance">--</span> FToken </span>
         </div>
+        <button id="claim-prize-btn" class="hidden">Claim Top 5 Prize (100k)</button>
         </div>
 
     <button id="start-button" tabindex="0">Start Game</button>
@@ -28,8 +30,7 @@
         <p>Don't hit the walls or the snake's own body!</p>
         <button id="play-button" tabindex="0">Play Now!</button>
         </div>
-
-    <div id="game-area" class="hidden" tabindex="-1">
+        <div id="game-area" class="hidden" tabindex="-1">
         <div id="player"></div> <div id="food"></div>
         </div>
 
