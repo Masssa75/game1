@@ -1,4 +1,6 @@
-// Corrected script.js
+// Added ethers declaration for clarity (loaded via CDN)
+/* global ethers, netlifyIdentity */ // Added netlifyIdentity too
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- Get references to elements ---
@@ -20,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const leaderboardDialog = document.getElementById('leaderboard-dialog');
     const leaderboardList = document.getElementById('leaderboard-list');
     const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
+    // Wallet elements
+    const connectWalletBtn = document.getElementById('connect-wallet-btn');
+    const walletStatusDiv = document.getElementById('wallet-status');
+    const walletSectionDiv = document.getElementById('wallet-section');
 
 
     // --- Game state variables ---
@@ -29,11 +35,19 @@ document.addEventListener('DOMContentLoaded', () => {
     let playerY = 10;
     const speedFactor = 0.075; // Or your preferred speed
 
+    // --- Wallet state variables ---
+    let ethersProvider = null;
+    let signer = null;
+    let userAddress = null;
+
+
     // --- Check elements ---
+    // Updated check includes wallet elements
     if (!startButton || !rulesScreen || !playButton || !gameArea || !player || !target ||
         !scoreDisplayContainer || !scoreSpan || !controlsContainer ||
         !btnUp || !btnDown || !btnLeft || !btnRight || !identityMenuPlaceholder ||
-        !showLeaderboardBtn || !leaderboardDialog || !leaderboardList || !closeLeaderboardBtn ) {
+        !showLeaderboardBtn || !leaderboardDialog || !leaderboardList || !closeLeaderboardBtn ||
+        !connectWalletBtn || !walletStatusDiv || !walletSectionDiv ) {
         console.error("One or more required game elements are missing!");
         document.body.innerHTML = "<h1>Error loading game elements. Please check HTML structure/IDs.</h1>";
         return;
@@ -65,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveScore(currentScore) {
         const user = netlifyIdentity.currentUser();
         if (user) {
-            console.log('User logged in, attempting to save score:', currentScore);
+            // console.log('User logged in, attempting to save score:', currentScore);
             try {
                 const token = await user.jwt();
                 const response = await fetch('/.netlify/functions/save-score', {
@@ -81,13 +95,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error(`Error saving score (${response.status}):`, errorData.error || 'Unknown error');
                 } else {
                     const result = await response.json();
-                    console.log('Score saved successfully:', result);
+                    // console.log('Score saved successfully:', result);
                 }
             } catch (error) {
                 console.error('Network or other error calling save-score function:', error);
             }
         } else {
-            console.log('User not logged in, score not saved.');
+            // console.log('User not logged in, score not saved.');
         }
     }
 
@@ -116,20 +130,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Handle Keyboard Input ---
-function handleKeyDown(event) {
-    if (!isGameActive) return;
-    // Remove spaces from key names in the array:
-    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
-        event.preventDefault();
-        // Remove spaces from key names in the case statements:
-        switch (event.key) {
-            case "ArrowUp":    movePlayer('up');    break;
-            case "ArrowDown":  movePlayer('down');  break;
-            case "ArrowLeft":  movePlayer('left');  break; // No spaces
-            case "ArrowRight": movePlayer('right'); break; // No spaces
+    function handleKeyDown(event) {
+        if (!isGameActive) return;
+        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+            event.preventDefault();
+            switch (event.key) {
+                case "ArrowUp":    movePlayer('up');    break;
+                case "ArrowDown":  movePlayer('down');  break;
+                case "ArrowLeft":  movePlayer('left');  break;
+                case "ArrowRight": movePlayer('right'); break;
+            }
         }
     }
-}
 
     // --- Function to start the game ---
     function startGame() {
@@ -172,27 +184,80 @@ function handleKeyDown(event) {
         }
     }
 
+    // --- Wallet Connection Logic ---
+    async function connectWallet() {
+        // Check if ethers is loaded (optional sanity check)
+        if (typeof ethers === 'undefined') {
+             console.error('Ethers.js not loaded!');
+             walletStatusDiv.textContent = 'Error: Ethers library missing.';
+             return;
+        }
+
+        if (typeof window.ethereum !== 'undefined') {
+            // MetaMask (or other compatible wallet) is installed
+            console.log('MetaMask is available!');
+            walletStatusDiv.textContent = 'Connecting... Please check wallet.'; // Update status
+            try {
+                // Use ethers.js
+                ethersProvider = new ethers.providers.Web3Provider(window.ethereum, "any"); // Specify "any" to allow network changes
+
+                // Request account access
+                await ethersProvider.send("eth_requestAccounts", []);
+
+                // Get the signer (account)
+                signer = ethersProvider.getSigner();
+                userAddress = await signer.getAddress();
+
+                console.log('Wallet connected:', userAddress);
+
+                // Update UI
+                const shortAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+                walletStatusDiv.innerHTML = `Connected: <span title="${userAddress}">${shortAddress}</span>`; // Show short address, full on hover
+                walletSectionDiv.classList.add('connected'); // Add class to hide button via CSS (if CSS rule exists)
+
+            } catch (error) {
+                console.error('Error connecting wallet:', error);
+                // Try to provide a more user-friendly error
+                let errorMessage = 'Connection failed.';
+                if (error.code === 4001) { // EIP-1193 user rejected request
+                    errorMessage = 'Connection rejected by user.';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                walletStatusDiv.textContent = `Error: ${errorMessage}`;
+                // Reset state if connection failed
+                ethersProvider = null;
+                signer = null;
+                userAddress = null;
+                walletSectionDiv.classList.remove('connected'); // Ensure button is shown if connect failed
+            }
+        } else {
+            // MetaMask not installed
+            console.error('MetaMask (or compatible wallet) not found!');
+            walletStatusDiv.textContent = 'Error: Wallet not found!';
+            // Suggest installing MetaMask
+            alert('Browser wallet not detected. Please install MetaMask or a similar wallet extension!');
+        }
+    }
+
+
     // --- Event Listeners ---
     startButton.addEventListener('click', () => {
          startButton.classList.add('hidden'); rulesScreen.classList.remove('hidden'); playButton.focus();
      });
     playButton.addEventListener('click', startGame);
     document.addEventListener('keydown', handleKeyDown);
-
     // On-Screen Button Listeners
     btnUp.addEventListener('click', () => movePlayer('up'));
     btnDown.addEventListener('click', () => movePlayer('down'));
     btnLeft.addEventListener('click', () => movePlayer('left'));
     btnRight.addEventListener('click', () => movePlayer('right'));
-
     // Leaderboard Button Listener
     showLeaderboardBtn.addEventListener('click', fetchAndDisplayLeaderboard);
-
     // Close Leaderboard Button Listener
     closeLeaderboardBtn.addEventListener('click', () => {
         leaderboardDialog.close();
     });
-
     // Optional: Close dialog if user clicks outside on the backdrop
     leaderboardDialog.addEventListener('click', (event) => {
        const rect = leaderboardDialog.getBoundingClientRect();
@@ -202,5 +267,12 @@ function handleKeyDown(event) {
          leaderboardDialog.close();
        }
      });
+    // Wallet Connect Button Listener
+    if(connectWalletBtn) { // Check if button exists before adding listener
+        connectWalletBtn.addEventListener('click', connectWallet);
+    } else {
+        console.error("Connect Wallet Button not found!");
+    }
+
 
 }); // End of DOMContentLoaded listener
