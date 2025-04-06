@@ -64,6 +64,21 @@ button:hover {
     background-color: #45a049;
 }
 
+/* --- Sign Score Button Style --- */
+#sign-score-btn {
+    background-color: #6f42c1; /* Purple */
+    color: white;
+    padding: 8px 15px;
+    font-size: 1.0em;
+    margin-top: 10px; /* Adjust spacing */
+    /* Inherits other button styles like border-radius, cursor */
+    /* It starts hidden via class="hidden" in HTML */
+}
+
+#sign-score-btn:hover {
+    background-color: #5a32a2;
+}
+
 button:focus {
     outline: 2px solid blue;
     outline-offset: 2px;
@@ -88,7 +103,7 @@ button:focus {
     border: 3px solid black;
     position: relative;
     background-color: #ffffff;
-    overflow: hidden;
+    overflow: hidden; /* Important for snake game! */
     margin-top: 15px;
     cursor: default;
 }
@@ -97,22 +112,36 @@ button:focus {
     outline: none;
 }
 
-#player {
-    width: 30px;
-    height: 30px;
-    background-color: blue;
+/* --- Snake Game Element Styles --- */
+#player { /* Represents the Snake HEAD */
+    width: 20px;  /* Match segmentSize in script.js */
+    height: 20px; /* Match segmentSize in script.js */
+    background-color: green; /* Snake head color */
     position: absolute;
-    top: 10px;
-    left: 10px;
+    /* JavaScript will set top/left */
 }
 
-#target {
-    width: 35px;
-    height: 35px;
-    background-color: red;
-    border-radius: 50%;
+.snake-segment { /* Style for Snake BODY parts */
+    width: 20px;  /* Match segmentSize */
+    height: 20px; /* Match segmentSize */
+    background-color: limegreen; /* Snake body color */
     position: absolute;
+    /* Add border or slightly rounded corners if desired */
+    /* border: 1px solid darkgreen; */
+    /* border-radius: 3px; */
 }
+
+#food { /* RENAMED from #target */
+    width: 20px;  /* Match segmentSize */
+    height: 20px; /* Match segmentSize */
+    background-color: red; /* Food color */
+    border-radius: 50%; /* Keep it circular? */
+    position: absolute;
+    /* JavaScript will set top/left and ensure visibility */
+}
+
+/* --- End Snake Game Element Styles --- */
+
 
 #score-display {
     margin-top: 15px;
