@@ -1,4 +1,4 @@
-// script.js - Snake Game Step 2: Food, Growth, Drawing
+// script.js - Snake Game Step 3: Collision Detection & Game Over
 /* global ethers, netlifyIdentity */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const playButton = document.getElementById('play-button');
     const gameArea = document.getElementById('game-area');
     const player = document.getElementById('player'); // Represents snake HEAD
-    const food = document.getElementById('food'); // Changed from target
+    const food = document.getElementById('food');
     const scoreDisplayContainer = document.getElementById('score-display');
     const scoreSpan = document.getElementById('score');
     const controlsContainer = document.getElementById('controls');
@@ -34,12 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let snake = [];
     let dx = segmentSize;
     let dy = 0;
-    let foodX = 0; // Food X coordinate
-    let foodY = 0; // Food Y coordinate
+    let foodX = 0;
+    let foodY = 0;
     let score = 0;
     let changingDirection = false;
     let gameLoopIntervalId = null;
-    const gameSpeed = 200;
+    const gameSpeed = 200; // Adjust for desired speed
     let isGameActive = false;
 
     // --- Wallet state variables ---
@@ -60,30 +60,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- NEW Snake Game Functions ---
 
     function clearSnakeBody() {
-        // Remove previously drawn body segments (keep #player for head, #food for food)
         const oldSegments = gameArea.querySelectorAll('.snake-segment');
         oldSegments.forEach(segment => segment.remove());
     }
 
     function drawSnake() {
-        if (snake.length === 0) return;
+        if (!isGameActive && snake.length === 0) { // Don't draw if game over and snake cleared (optional)
+             clearSnakeBody();
+             player.classList.add('hidden'); // Hide head too
+             return;
+        }
+        if (snake.length === 0) return; // Should not happen if game active
 
-        clearSnakeBody(); // Remove old body parts first
+        clearSnakeBody();
 
-        // Iterate through snake segments and draw them
         snake.forEach((segment, index) => {
             if (index === 0) {
-                // Update the Head (#player div) position
                 player.style.left = segment.x + 'px';
                 player.style.top = segment.y + 'px';
-                player.classList.remove('hidden'); // Ensure head is visible
+                player.classList.remove('hidden');
             } else {
-                // Create and draw a body segment div
                 const segmentDiv = document.createElement('div');
                 segmentDiv.classList.add('snake-segment');
                 segmentDiv.style.left = segment.x + 'px';
                 segmentDiv.style.top = segment.y + 'px';
-                // Style (width, height, color) should come from '.snake-segment' CSS rule
                 gameArea.appendChild(segmentDiv);
             }
         });
@@ -92,92 +92,122 @@ document.addEventListener('DOMContentLoaded', () => {
     function createFood() {
         const gameAreaWidth = gameArea.offsetWidth;
         const gameAreaHeight = gameArea.offsetHeight;
-        // Adjust max calculation slightly to prevent food spawning exactly on right/bottom edge if gameArea isn't perfect multiple
         const maxX = Math.floor((gameAreaWidth - segmentSize) / segmentSize);
         const maxY = Math.floor((gameAreaHeight - segmentSize) / segmentSize);
 
         let newFoodX, newFoodY;
         let foodOnSnake;
 
-        // Ensure game area is large enough
         if (maxX < 0 || maxY < 0) {
             console.error("Game area too small for food placement.");
-            // Optionally hide food or handle error differently
             food.classList.add('hidden');
             return;
         }
 
         do {
             foodOnSnake = false;
-            // Generate random grid position (make sure it's not negative)
             const gridX = Math.max(0, Math.floor(Math.random() * (maxX + 1)));
             const gridY = Math.max(0, Math.floor(Math.random() * (maxY + 1)));
-            // Convert to pixel position
             newFoodX = gridX * segmentSize;
             newFoodY = gridY * segmentSize;
 
-            // Check if the new food position overlaps with any snake segment
             for (let i = 0; i < snake.length; i++) {
                 if (snake[i].x === newFoodX && snake[i].y === newFoodY) {
                     foodOnSnake = true;
-                    console.log("Food collision detected on spawn, retrying..."); // Debug log
-                    break; // No need to check further if overlap found
+                    break;
                 }
             }
-        } while (foodOnSnake); // Keep trying until a free spot is found
+        } while (foodOnSnake);
 
-        // Store and position the food
         foodX = newFoodX;
         foodY = newFoodY;
         food.style.left = foodX + 'px';
         food.style.top = foodY + 'px';
-        food.classList.remove('hidden'); // Ensure food is visible
-        console.log(`New food at: ${foodX}, ${foodY}`); // Debug log
+        food.classList.remove('hidden');
     }
 
 
     function moveSnake() {
-        // Calculate the new head position based on current velocity (dx, dy)
+        // Calculate the new head position
         const head = { x: snake[0].x + dx, y: snake[0].y + dy };
-        
-        // Check if the snake ate the food (BEFORE unshifting the new head)
+        snake.unshift(head); // Add new head
+
         const didEatFood = head.x === foodX && head.y === foodY;
 
-        // Add the new head regardless of eating
-        snake.unshift(head);
-
         if (didEatFood) {
-            // Increase Score
             score++;
             scoreSpan.textContent = score;
-            // Generate new food
-            createFood();
-            // Don't remove tail segment - snake grows
-            console.log(`Ate food! Score: ${score}, Length: ${snake.length}`); // Debug log
+            createFood(); // Only create new food if eaten
         } else {
-            // Remove the last segment to simulate movement
-            snake.pop();
+            snake.pop(); // Remove tail if no food eaten
         }
     }
 
+     // *** NEW Game Over Function ***
+     function gameOver() {
+        console.log("GAME OVER!");
+        isGameActive = false;
+        clearInterval(gameLoopIntervalId); // Stop the game loop
+        gameLoopIntervalId = null; // Clear the interval ID
+
+        // Inform the user
+        alert(`Game Over! Your score: ${score}`);
+
+        // Attempt to save the score
+        saveScore(score);
+
+        // Update button visibility (potentially show Sign Score button)
+        updateSignButtonVisibility();
+
+        // Optional: Hide snake/food visually after game over?
+        // clearSnakeBody();
+        // player.classList.add('hidden');
+        // food.classList.add('hidden');
+    }
+
     function gameLoop() {
-        if (!isGameActive) return;
+        if (!isGameActive) return; // Exit if game is already over
 
-        changingDirection = false;
+        changingDirection = false; // Reset direction change flag
 
-        // --- Collision Detection (Boundary/Self - To be added later) ---
-        // const head = snake[0]; // Get current head for collision checks *before* moveSnake runs
+        // Calculate NEXT head position for collision checks
+        const nextHeadX = snake[0].x + dx;
+        const nextHeadY = snake[0].y + dy;
 
-        // --- Move snake (includes eating check & potential growth) ---
-        moveSnake(); // This now handles unshift and pop/growth
+        // --- Collision Detection ---
+        const gameAreaWidth = gameArea.offsetWidth;
+        const gameAreaHeight = gameArea.offsetHeight;
 
-        // --- Draw the snake (head and body) ---
-        drawSnake();
+        // 1. Wall Collision Check
+        const hitLeftWall = nextHeadX < 0;
+        const hitRightWall = nextHeadX >= gameAreaWidth - (segmentSize/2); // Allow head center to touch edge maybe? Adjust as needed. >= Width means outside.
+        const hitTopWall = nextHeadY < 0;
+        const hitBottomWall = nextHeadY >= gameAreaHeight - (segmentSize/2); // >= Height means outside.
+
+        if (hitLeftWall || hitRightWall || hitTopWall || hitBottomWall) {
+            console.log("Collision: Wall");
+            gameOver();
+            return; // Stop further processing in this loop iteration
+        }
+
+        // 2. Self Collision Check
+        // Iterate through the snake body (skip the head, index 0)
+        for (let i = 1; i < snake.length; i++) {
+            if (nextHeadX === snake[i].x && nextHeadY === snake[i].y) {
+                console.log("Collision: Self");
+                gameOver();
+                return; // Stop further processing
+            }
+        }
+
+        // --- If no collision detected, proceed ---
+        moveSnake(); // Move snake (includes eating check & potential growth)
+        drawSnake(); // Draw the snake in its new position
     }
 
     function handleDirectionChange(event) {
+        // No changes needed here from previous step
         if (!isGameActive || changingDirection) return;
-
         const key = event.key;
         const buttonId = event.target?.id;
         const goingUp = dy === -segmentSize;
@@ -195,65 +225,66 @@ document.addEventListener('DOMContentLoaded', () => {
             newDx = -segmentSize; newDy = 0;
         } else if ((key === "ArrowRight" || buttonId === 'btn-right') && !goingLeft) {
             newDx = segmentSize; newDy = 0;
-        } else {
-            return;
-        }
+        } else { return; }
 
         if (dx !== newDx || dy !== newDy) {
             changingDirection = true;
             dx = newDx;
             dy = newDy;
-            console.log(`Direction changed: dx=${dx}, dy=${dy}`); // Debug log
         }
     }
 
     // --- Modified Game Flow Functions ---
     function startGame() {
-        if (gameLoopIntervalId) {
-            clearInterval(gameLoopIntervalId);
-        }
+        if (gameLoopIntervalId) { clearInterval(gameLoopIntervalId); }
 
-        isGameActive = true;
+        isGameActive = true; // Set game active BEFORE initializing
         score = 0;
         scoreSpan.textContent = score;
-        // Initialize snake with multiple segments
-        snake = [
-            { x: segmentSize * 4, y: segmentSize }, // Head
-            { x: segmentSize * 3, y: segmentSize }, // Body
-            { x: segmentSize * 2, y: segmentSize }  // Tail
+        snake = [ // Reset snake
+            { x: segmentSize * 4, y: segmentSize },
+            { x: segmentSize * 3, y: segmentSize },
+            { x: segmentSize * 2, y: segmentSize }
         ];
-        dx = segmentSize; // Start moving right
+        dx = segmentSize; // Reset direction
         dy = 0;
         changingDirection = false;
-        clearSnakeBody(); // Clear any leftover segments from previous game
+        clearSnakeBody();
 
         rulesScreen.classList.add('hidden');
         gameArea.classList.remove('hidden');
         scoreDisplayContainer.classList.remove('hidden');
         controlsContainer.classList.remove('hidden');
-        player.classList.remove('hidden'); // Show head
-        food.classList.remove('hidden'); // Ensure food container is potentially visible
+        player.classList.remove('hidden');
+        food.classList.remove('hidden');
 
-        updateSignButtonVisibility();
+        updateSignButtonVisibility(); // Hide sign button at start
 
-        drawSnake(); // Draw initial snake BEFORE placing food
-        createFood(); // Place initial food
+        drawSnake();
+        createFood();
 
-        gameLoopIntervalId = setInterval(gameLoop, gameSpeed);
+        gameLoopIntervalId = setInterval(gameLoop, gameSpeed); // Start loop AFTER setup
     }
 
-    // --- Functions to Keep (Modify/Integrate Later) ---
-    // updateSignButtonVisibility, saveScore, fetchAndDisplayLeaderboard, connectWallet, signScoreVerification
-    // (These remain largely the same for now, but will need adjustments for game over state)
+    // --- Functions to Keep/Modify ---
 
+    // *** MODIFIED updateSignButtonVisibility ***
     function updateSignButtonVisibility() {
         const user = netlifyIdentity.currentUser();
-        if (signScoreBtn) signScoreBtn.classList.add('hidden'); // Hide for now
-        scoreToSign = null;
+        // Show button only if Game is OVER, user logged in, wallet connected, and score >= 0
+        if (!isGameActive && score >= 0 && user && signer) {
+            scoreToSign = score; // Set the final score to be signed
+             if (signScoreBtn) signScoreBtn.classList.remove('hidden');
+             console.log("Sign score button should be visible now.");
+        } else {
+             if (signScoreBtn) signScoreBtn.classList.add('hidden');
+             scoreToSign = null; // Reset if conditions aren't met
+             console.log("Sign score button hidden. Conditions:", {isGameActive, score, user: !!user, signer: !!signer});
+        }
     }
 
     async function saveScore(finalScore) {
-        // Call this on Game Over
+        // No changes needed here, called by gameOver()
         const user = netlifyIdentity.currentUser();
         if (user) {
             console.log(`Attempting to save final score: ${finalScore}`);
@@ -270,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchAndDisplayLeaderboard() {
+        // No changes needed here
         leaderboardList.innerHTML = '<li>Loading...</li>';
         leaderboardDialog.showModal();
          try {
@@ -295,7 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function connectWallet() {
-        // Corrected version from previous step
+        // No changes needed here
         if (typeof ethers === 'undefined') { console.error('Ethers.js not loaded!'); walletStatusDiv.textContent = 'Error: Ethers library missing.'; return; }
         if (typeof window.ethereum !== 'undefined') {
             console.log('MetaMask is available!'); walletStatusDiv.textContent = 'Connecting... Please check wallet.';
@@ -308,14 +340,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const shortAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
                 walletStatusDiv.innerHTML = `Connected: <span title="${userAddress}">${shortAddress}</span>`;
                 walletSectionDiv.classList.add('connected');
-                updateSignButtonVisibility();
+                updateSignButtonVisibility(); // Call after connecting
             } catch (error) {
                 console.error('Error connecting wallet:', error); let errorMessage = 'Connection failed.';
                 if (error.code === 4001) { errorMessage = 'Connection rejected by user.'; } else if (error.message) { errorMessage = error.message; }
                 walletStatusDiv.textContent = `Error: ${errorMessage}`;
                 ethersProvider = null; signer = null; userAddress = null;
                 walletSectionDiv.classList.remove('connected');
-                updateSignButtonVisibility();
+                updateSignButtonVisibility(); // Call after failure too
             }
         } else {
             console.error('MetaMask (or compatible wallet) not found!'); walletStatusDiv.textContent = 'Error: Wallet not found!';
@@ -325,22 +357,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     async function signScoreVerification() {
-        // Needs adjustment for Game Over state
+        // No major changes needed here, uses 'score' which holds final score at game over
         if (!signer) { console.error("Signer not available."); alert("Wallet not connected."); return; }
-        const finalScore = score; // Assume score holds final score when called
-        scoreToSign = finalScore;
+        // scoreToSign is now correctly set by updateSignButtonVisibility if game is over
         if (scoreToSign === null || scoreToSign < 0) {
              console.error("No valid final score available to sign.");
              alert("No valid final score from this session to sign.");
              return;
         }
-        const message = `Verifying my score in Snake Game: ${scoreToSign} points.`;
+        const message = `Verifying my score in Snake Game: ${scoreToSign} points.`; // Uses scoreToSign
         console.log("Attempting to sign message:", message);
         alert(`Please sign the message in your wallet to verify your score of ${scoreToSign}.`);
         try {
             const signature = await signer.signMessage(message);
             console.log("Signature received:", signature);
             alert(`Score signed successfully!\nSignature: ${signature.substring(0, 10)}...${signature.substring(signature.length - 4)}`);
+            // Optionally hide button after signing
+            // if (signScoreBtn) signScoreBtn.classList.add('hidden');
             // scoreToSign = null;
         } catch (error) {
             console.error("Error signing message:", error);
@@ -350,6 +383,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Event Listeners ---
+    // No changes needed here
     startButton.addEventListener('click', () => { startButton.classList.add('hidden'); rulesScreen.classList.remove('hidden'); });
     playButton.addEventListener('click', startGame);
     document.addEventListener('keydown', handleDirectionChange);
@@ -364,19 +398,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if(signScoreBtn) { signScoreBtn.addEventListener('click', signScoreVerification); } else { console.error("Sign Score Button not found!"); }
 
     // Netlify Identity listeners
+    // Call updateSignButtonVisibility on login/logout/init to check if conditions are met post-game-over
      netlifyIdentity.on('login', user => {
         console.log('Netlify login event for:', user.email);
-        updateSignButtonVisibility();
+        updateSignButtonVisibility(); // Check if game was over & conditions now met
     });
     netlifyIdentity.on('logout', () => {
         console.log('Netlify logout event');
-        updateSignButtonVisibility();
+        updateSignButtonVisibility(); // Hide button if user logs out
     });
      netlifyIdentity.on('init', user => {
          console.log('Netlify init event');
          if (user) { console.log('User already logged in:', user.email); }
          else { console.log('User not logged in on init.'); }
-         updateSignButtonVisibility();
+         updateSignButtonVisibility(); // Check on load
      });
 
 }); // <<< --- } closes Outer DOMContentLoaded
