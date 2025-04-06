@@ -116,20 +116,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Handle Keyboard Input ---
-    function handleKeyDown(event) {
-        if (!isGameActive) return;
-        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
-            event.preventDefault();
-            switch (event.key) {
-                case "ArrowUp":    movePlayer('up');    break;
-                case "ArrowDown":  movePlayer('down');  break;
-                // --- CORRECTED LINES ---
-                case "ArrowLeft":  movePlayer('left');  break;
-                case "ArrowRight": movePlayer('right'); break;
-                // --- END OF CORRECTION ---
-            }
+function handleKeyDown(event) {
+    if (!isGameActive) return;
+    // Remove spaces from key names in the array:
+    if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+        event.preventDefault();
+        // Remove spaces from key names in the case statements:
+        switch (event.key) {
+            case "ArrowUp":    movePlayer('up');    break;
+            case "ArrowDown":  movePlayer('down');  break;
+            case "ArrowLeft":  movePlayer('left');  break; // No spaces
+            case "ArrowRight": movePlayer('right'); break; // No spaces
         }
     }
+}
 
     // --- Function to start the game ---
     function startGame() {
