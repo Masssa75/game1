@@ -148,7 +148,7 @@ button:focus {
     text-align: center; /* Center align text and button within */
 }
 
-/* --- ADDED STYLES for Restart Button --- */
+/* --- Styles for Restart Button --- */
 #restart-button {
     display: inline-block; /* Allow it near score, or use block */
     margin: 10px 0 0 0; /* Add some top margin */
@@ -167,7 +167,7 @@ button:focus {
 #restart-button:hover {
     background-color: #0056b3;
 }
-/* --- END OF ADDED STYLES --- */
+/* --- End OF Restart Button STYLES --- */
 
 
 #controls {
@@ -232,12 +232,24 @@ button:focus {
 }
 
 #wallet-status {
-    display: inline-block; /* Keep on same line as button */
+    /* display: inline-block; Keep on same line as button */
+    /* Now contains multiple lines, adjust alignment if needed */
     font-size: 0.9em;
     color: #555;
     word-break: break-all; /* Allow long addresses to wrap */
     vertical-align: middle; /* Align text vertically with button */
+    line-height: 1.4; /* Adjust line height for readability */
 }
+
+/* --- ADDED Style for Token Info --- */
+.token-info {
+    font-size: 0.85em; /* Slightly smaller */
+    color: #333;
+    margin-top: 4px; /* Add some space */
+    display: block; /* Ensure it appears on its own line */
+}
+/* --- END OF ADDED Style --- */
+
 
 /* Style for when wallet is connected */
 #wallet-section.connected #connect-wallet-btn {

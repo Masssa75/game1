@@ -3,31 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Snake Game</title> <link rel="stylesheet" href="style.css">
+    <title>Snake Game</title>
+    <link rel="stylesheet" href="style.css">
     <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js" type="application/javascript"></script>
 </head>
 <body>
-    <h1>Snake Game</h1> <div data-netlify-identity-menu></div>
+    <h1>Snake Game</h1>
+    <div data-netlify-identity-menu></div>
     <div id="wallet-section">
         <button id="connect-wallet-btn">Connect Wallet</button>
-        <div id="wallet-status">Status: Not Connected</div>
-    </div>
+        <div id="wallet-status">
+            Status: Not Connected
+            <br> <span class="token-info hidden"> Balance: <span id="token-balance">--</span> FToken </span>
+        </div>
+        </div>
 
     <button id="start-button" tabindex="0">Start Game</button>
 
     <div id="rules-screen" class="hidden">
-        <h2>How to Play Snake</h2> <p>Use the <kbd>▲</kbd> <kbd>▼</kbd> <kbd>◄</kbd> <kbd>►</kbd> arrow keys or on-screen buttons to change the snake's direction.</p>
-        <p>Eat the red food (<div style="width:10px; height:10px; background:red; border-radius:50%; display:inline-block;"></div>) to grow longer and score points.</p> <p>Don't hit the walls or the snake's own body!</p> <button id="play-button" tabindex="0">Play Now!</button>
-    </div>
+        <h2>How to Play Snake</h2>
+        <p>Use the <kbd>▲</kbd> <kbd>▼</kbd> <kbd>◄</kbd> <kbd>►</kbd> arrow keys or on-screen buttons to change the snake's direction.</p>
+        <p>Eat the red food (<div style="width:10px; height:10px; background:red; border-radius:50%; display:inline-block;"></div>) to grow longer and score points.</p>
+        <p>Don't hit the walls or the snake's own body!</p>
+        <button id="play-button" tabindex="0">Play Now!</button>
+        </div>
 
     <div id="game-area" class="hidden" tabindex="-1">
-        <div id="player"></div> <div id="food"></div>   </div>
+        <div id="player"></div> <div id="food"></div>
+        </div>
 
     <div id="score-display" class="hidden">
          <p>Score: <span id="score">0</span></p>
          <button id="restart-button" class="hidden">Play Again?</button>
-         </div>
+    </div>
 
     <button id="sign-score-btn" class="hidden">Sign Last Score</button>
 
