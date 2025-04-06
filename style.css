@@ -206,4 +206,240 @@ button:focus {
 
 .hidden {
     display: none;
+}/* Consolidated and Simplified Body Styles */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    box-sizing: border-box; /* Apply box-sizing globally */
+}
+
+*, *:before, *:after { /* Inherit box-sizing */
+  box-sizing: inherit;
+}
+
+body {
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+    justify-content: center; /* Center vertically */
+    align-items: center;     /* Center horizontally */
+    min-height: 100%;        /* Use full height */
+    background-color: #f0f0f0; /* Light grey background */
+    padding: 10px;           /* Add some padding around content */
+    overscroll-behavior-y: contain; /* Prevent pull-to-refresh on mobile */
+}
+
+h1, h2 {
+    text-align: center;
+    margin-top: 0; /* Remove default top margin */
+    margin-bottom: 15px;
+}
+
+p {
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    text-align: center;
+}
+
+kbd {
+    background-color: #eee;
+    border-radius: 3px;
+    border: 1px solid #b4b4b4;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 2px 0 0 rgba(255, 255, 255, .7) inset;
+    color: #333;
+    display: inline-block;
+    font-size: 0.85em;
+    font-weight: 700;
+    line-height: 1;
+    padding: 2px 4px;
+    white-space: nowrap;
+}
+
+button { /* Default button style (like Start/Play) */
+    padding: 10px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border: 1px solid #333;
+    border-radius: 5px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    margin-top: 15px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+button:focus {
+    outline: 2px solid blue;
+    outline-offset: 2px;
+}
+
+#rules-screen {
+    border: 2px solid #ccc;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    width: 80%;
+    max-width: 500px;
+    text-align: center;
+}
+
+#game-area {
+    width: 90%;
+    max-width: 600px;
+    height: 400px; /* Fixed height might be okay */
+    max-height: 65vh; /* Limit height relative to viewport */
+    border: 3px solid black;
+    position: relative;
+    background-color: #ffffff;
+    overflow: hidden;
+    margin-top: 15px;
+    cursor: default;
+}
+
+#game-area:focus {
+    outline: none;
+}
+
+#player {
+    width: 30px;
+    height: 30px;
+    background-color: blue;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+
+#target {
+    width: 35px;
+    height: 35px;
+    background-color: red;
+    border-radius: 50%;
+    position: absolute;
+}
+
+#score-display {
+    margin-top: 15px;
+}
+
+#controls {
+    margin-top: 15px;
+    text-align: center;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+#controls button {
+    font-size: 1.8em;
+    padding: 8px 15px;
+    min-width: 60px;
+    margin: 5px;
+    background-color: #d3d3d3;
+    color: #333;
+    border: 1px solid #aaa;
+    border-radius: 8px;
+    line-height: 1.2;
+    touch-action: manipulation; /* Prevent double-tap zoom */
+}
+
+#controls button:active {
+    background-color: #bbb;
+}
+
+#controls > div {
+    display: flex;
+    justify-content: center;
+}
+
+
+/* --- Leaderboard Styles --- */
+
+#leaderboard-controls {
+    margin-top: 20px; /* Space above the button */
+    text-align: center;
+}
+
+#show-leaderboard-btn {
+    /* Use specific styling for this button */
+    padding: 10px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border: 1px solid #333;
+    border-radius: 5px;
+    background-color: #007bff; /* Blue */
+    color: white;
+    margin-top: 0; /* Reset margin if needed */
+}
+
+#show-leaderboard-btn:hover {
+    background-color: #0056b3;
+}
+
+/* Styles for the <dialog> element */
+dialog#leaderboard-dialog {
+    border: 2px solid #ccc;
+    background-color: #f9f9f9;
+    padding: 20px;
+    padding-top: 35px; /* Extra padding at top for close button */
+    border-radius: 8px;
+    width: 80%;
+    max-width: 450px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    position: relative; /* Needed for absolute positioning of close button */
+    /* Default centering is handled by showModal() */
+}
+
+/* Style the backdrop that appears behind the modal */
+dialog#leaderboard-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+
+dialog#leaderboard-dialog h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    color: #333;
+    text-align: center;
+}
+
+#leaderboard-list { /* Style for the <ol> inside the dialog */
+    list-style-type: decimal; /* Use numbers */
+    padding-left: 30px; /* Indent list items */
+    margin: 0;
+    text-align: left;
+}
+
+#leaderboard-list li {
+    margin-bottom: 8px; /* Space between list items */
+    font-size: 1.1em;
+    color: #555;
+}
+
+/* Style for the new Close button */
+#close-leaderboard-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    line-height: 1;
+    padding: 5px;
+    cursor: pointer;
+    color: #888;
+    margin: 0; /* Reset button margin */
+}
+ #close-leaderboard-btn:hover {
+    color: #333;
+}
+
+.hidden { /* Keep the hidden class */
+    display: none;
 }
