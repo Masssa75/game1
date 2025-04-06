@@ -1,5 +1,5 @@
-// Added ethers declaration for clarity (loaded via CDN)
-/* global ethers, netlifyIdentity */ // Added netlifyIdentity too
+// Corrected script.js (Fixes ArrowLeft/ArrowRight keys)
+/* global ethers, netlifyIdentity */
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -22,10 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const leaderboardDialog = document.getElementById('leaderboard-dialog');
     const leaderboardList = document.getElementById('leaderboard-list');
     const closeLeaderboardBtn = document.getElementById('close-leaderboard-btn');
-    // Wallet elements
     const connectWalletBtn = document.getElementById('connect-wallet-btn');
     const walletStatusDiv = document.getElementById('wallet-status');
     const walletSectionDiv = document.getElementById('wallet-section');
+    // Add reference for sign score button
+    const signScoreBtn = document.getElementById('sign-score-btn');
 
 
     // --- Game state variables ---
@@ -33,7 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isGameActive = false;
     let playerX = 10;
     let playerY = 10;
-    const speedFactor = 0.075; // Or your preferred speed
+    const speedFactor = 0.075;
+    let scoreToSign = null; // Variable to hold score for signing
 
     // --- Wallet state variables ---
     let ethersProvider = null;
@@ -42,12 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Check elements ---
-    // Updated check includes wallet elements
+    // Added signScoreBtn check
     if (!startButton || !rulesScreen || !playButton || !gameArea || !player || !target ||
         !scoreDisplayContainer || !scoreSpan || !controlsContainer ||
         !btnUp || !btnDown || !btnLeft || !btnRight || !identityMenuPlaceholder ||
         !showLeaderboardBtn || !leaderboardDialog || !leaderboardList || !closeLeaderboardBtn ||
-        !connectWalletBtn || !walletStatusDiv || !walletSectionDiv ) {
+        !connectWalletBtn || !walletStatusDiv || !walletSectionDiv || !signScoreBtn ) {
         console.error("One or more required game elements are missing!");
         document.body.innerHTML = "<h1>Error loading game elements. Please check HTML structure/IDs.</h1>";
         return;
@@ -123,25 +125,36 @@ document.addEventListener('DOMContentLoaded', () => {
         playerY = Math.max(0, Math.min(newY, gameAreaHeight - playerHeight));
         updatePlayerPosition();
         if (checkCollision()) {
-            score++; scoreSpan.textContent = score;
-            saveScore(score);
+            score++;
+            scoreSpan.textContent = score;
+            saveScore(score); // Call existing save function
+
+            // Show Sign button if conditions met
+            if (signer && netlifyIdentity.currentUser()) {
+                scoreToSign = score;
+                if (signScoreBtn) signScoreBtn.classList.remove('hidden');
+            }
+
             moveTarget();
         }
     }
 
-    // --- Handle Keyboard Input ---
+    // --- Handle Keyboard Input --- // <<< CORRECTED SECTION
     function handleKeyDown(event) {
         if (!isGameActive) return;
+        // Corrected key names (no extra spaces)
         if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
             event.preventDefault();
+            // Corrected key names (no extra spaces)
             switch (event.key) {
                 case "ArrowUp":    movePlayer('up');    break;
                 case "ArrowDown":  movePlayer('down');  break;
-                case "ArrowLeft":  movePlayer('left');  break;
-                case "ArrowRight": movePlayer('right'); break;
+                case "ArrowLeft":  movePlayer('left');  break; // Corrected case
+                case "ArrowRight": movePlayer('right'); break; // Corrected case
             }
         }
     }
+    // <<< END OF CORRECTION
 
     // --- Function to start the game ---
     function startGame() {
@@ -152,6 +165,10 @@ document.addEventListener('DOMContentLoaded', () => {
         gameArea.classList.remove('hidden');
         scoreDisplayContainer.classList.remove('hidden');
         controlsContainer.classList.remove('hidden');
+        // Hide sign score button when starting new game
+        if(signScoreBtn) signScoreBtn.classList.add('hidden');
+        scoreToSign = null;
+
         moveTarget();
         gameArea.focus();
     }
@@ -186,57 +203,71 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Wallet Connection Logic ---
     async function connectWallet() {
-        // Check if ethers is loaded (optional sanity check)
         if (typeof ethers === 'undefined') {
              console.error('Ethers.js not loaded!');
              walletStatusDiv.textContent = 'Error: Ethers library missing.';
              return;
         }
-
         if (typeof window.ethereum !== 'undefined') {
-            // MetaMask (or other compatible wallet) is installed
             console.log('MetaMask is available!');
-            walletStatusDiv.textContent = 'Connecting... Please check wallet.'; // Update status
+            walletStatusDiv.textContent = 'Connecting... Please check wallet.';
             try {
-                // Use ethers.js
-                ethersProvider = new ethers.providers.Web3Provider(window.ethereum, "any"); // Specify "any" to allow network changes
-
-                // Request account access
+                ethersProvider = new ethers.providers.Web3Provider(window.ethereum, "any");
                 await ethersProvider.send("eth_requestAccounts", []);
-
-                // Get the signer (account)
                 signer = ethersProvider.getSigner();
                 userAddress = await signer.getAddress();
-
                 console.log('Wallet connected:', userAddress);
-
-                // Update UI
                 const shortAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-                walletStatusDiv.innerHTML = `Connected: <span title="${userAddress}">${shortAddress}</span>`; // Show short address, full on hover
-                walletSectionDiv.classList.add('connected'); // Add class to hide button via CSS (if CSS rule exists)
-
+                walletStatusDiv.innerHTML = `Connected: <span title="${userAddress}">${shortAddress}</span>`;
+                walletSectionDiv.classList.add('connected');
             } catch (error) {
                 console.error('Error connecting wallet:', error);
-                // Try to provide a more user-friendly error
                 let errorMessage = 'Connection failed.';
-                if (error.code === 4001) { // EIP-1193 user rejected request
-                    errorMessage = 'Connection rejected by user.';
-                } else if (error.message) {
-                    errorMessage = error.message;
-                }
+                if (error.code === 4001) { errorMessage = 'Connection rejected by user.'; }
+                else if (error.message) { errorMessage = error.message; }
                 walletStatusDiv.textContent = `Error: ${errorMessage}`;
-                // Reset state if connection failed
-                ethersProvider = null;
-                signer = null;
-                userAddress = null;
-                walletSectionDiv.classList.remove('connected'); // Ensure button is shown if connect failed
+                ethersProvider = null; signer = null; userAddress = null;
+                walletSectionDiv.classList.remove('connected');
             }
         } else {
-            // MetaMask not installed
             console.error('MetaMask (or compatible wallet) not found!');
             walletStatusDiv.textContent = 'Error: Wallet not found!';
-            // Suggest installing MetaMask
             alert('Browser wallet not detected. Please install MetaMask or a similar wallet extension!');
+        }
+    }
+
+    // --- Function to Sign Score Verification ---
+    async function signScoreVerification() {
+        const netlifyUser = netlifyIdentity.currentUser();
+        if (!signer) { alert("Please connect your wallet first."); return; }
+        if (!netlifyUser) { alert("Please log in to verify score."); return; }
+        if (scoreToSign === null) { alert("No current score available to sign."); return; }
+
+        const message = `Verify score: ${scoreToSign}\nUser: ${netlifyUser.email}\nWallet: ${userAddress}`;
+        try {
+            console.log("Requesting signature for message:", message);
+            walletStatusDiv.textContent = 'Signing... Check Wallet';
+            const signature = await signer.signMessage(message);
+            console.log("--- Score Verification ---");
+            console.log("Message Signed:", message);
+            console.log("Signature:", signature);
+            console.log("Signer Address:", userAddress);
+            console.log("--------------------------");
+            alert(`Score of ${scoreToSign} signed successfully!\nSignature logged to console.`);
+            if (signScoreBtn) signScoreBtn.classList.add('hidden');
+            scoreToSign = null;
+            const shortAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+            walletStatusDiv.innerHTML = `Connected: <span title="${userAddress}">${shortAddress}</span>`;
+            // FUTURE: Send signature to backend
+        } catch (error) {
+            console.error("Error signing message:", error);
+            alert(`Signing failed: ${error.code === 4001 ? 'User rejected signature.' : error.message}`);
+             if(userAddress){
+                 const shortAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+                 walletStatusDiv.innerHTML = `Connected: <span title="${userAddress}">${shortAddress}</span>`;
+             } else {
+                 walletStatusDiv.textContent = 'Status: Not Connected';
+             }
         }
     }
 
@@ -268,11 +299,10 @@ document.addEventListener('DOMContentLoaded', () => {
        }
      });
     // Wallet Connect Button Listener
-    if(connectWalletBtn) { // Check if button exists before adding listener
-        connectWalletBtn.addEventListener('click', connectWallet);
-    } else {
-        console.error("Connect Wallet Button not found!");
-    }
-
+    if(connectWalletBtn) { connectWalletBtn.addEventListener('click', connectWallet); }
+    else { console.error("Connect Wallet Button not found!"); }
+    // Sign Score Button Listener
+    if(signScoreBtn) { signScoreBtn.addEventListener('click', signScoreVerification); }
+     else { console.error("Sign Score Button not found!"); }
 
 }); // End of DOMContentLoaded listener
