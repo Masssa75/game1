@@ -145,7 +145,30 @@ button:focus {
 
 #score-display {
     margin-top: 15px;
+    text-align: center; /* Center align text and button within */
 }
+
+/* --- ADDED STYLES for Restart Button --- */
+#restart-button {
+    display: inline-block; /* Allow it near score, or use block */
+    margin: 10px 0 0 0; /* Add some top margin */
+    /* Centering handled by text-align on parent #score-display if block */
+    /* If inline-block, can add margin: 10px auto 0 auto if parent isn't text-align: center */
+    padding: 8px 15px; /* Slightly smaller */
+    font-size: 1.0em;
+    cursor: pointer;
+    border: 1px solid #333;
+    border-radius: 5px;
+    background-color: #007bff; /* Blue like leaderboard button */
+    color: white;
+    /* Initially hidden via class="hidden" */
+}
+
+#restart-button:hover {
+    background-color: #0056b3;
+}
+/* --- END OF ADDED STYLES --- */
+
 
 #controls {
     margin-top: 15px;
