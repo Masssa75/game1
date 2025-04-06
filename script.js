@@ -1,4 +1,4 @@
-// script.js - Updated for flexible Sign Score button display
+// script.js - Updated for flexible Sign Score button display & implemented signing
 /* global ethers, netlifyIdentity */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -156,7 +156,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Function to Fetch and Display Leaderboard ---
-    async function fetchAndDisplayLeaderboard() { /* ... same code as before ... */ }
+    async function fetchAndDisplayLeaderboard() {
+        /* =========================================== */
+        /* === PLACEHOLDER - Needs Implementation === */
+        /* =========================================== */
+        leaderboardList.innerHTML = '<li>Loading...</li>'; // Show loading state
+        leaderboardDialog.showModal(); // Display the dialog
+
+        try {
+             const response = await fetch('/.netlify/functions/get-leaderboard');
+             if (!response.ok) {
+                 throw new Error(`Leaderboard fetch failed: ${response.statusText}`);
+             }
+             const leaderboardData = await response.json();
+
+             // Clear loading/previous entries
+             leaderboardList.innerHTML = '';
+
+             if (leaderboardData && leaderboardData.length > 0) {
+                 leaderboardData.forEach(entry => {
+                     const li = document.createElement('li');
+                     // Simple display: Email (masked potentially) and Score
+                     // Mask email for privacy: user***@domain.com
+                     const email = entry.user_email;
+                     const maskedEmail = email ? `${email.substring(0, 3)}***@${email.split('@')[1]}` : 'Anonymous';
+                     li.textContent = `${maskedEmail}: ${entry.score}`;
+                     leaderboardList.appendChild(li);
+                 });
+             } else {
+                 leaderboardList.innerHTML = '<li>Leaderboard is empty.</li>';
+             }
+
+         } catch (error) {
+             console.error("Error fetching or displaying leaderboard:", error);
+             leaderboardList.innerHTML = '<li>Error loading leaderboard.</li>';
+         }
+
+    } // <<< END of fetchAndDisplayLeaderboard
+
 
     // --- Wallet Connection Logic ---
     async function connectWallet() {
@@ -169,8 +206,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 signer = ethersProvider.getSigner();
                 userAddress = await signer.getAddress();
                 console.log('Wallet connected:', userAddress);
-                const shortAddress = `<span class="math-inline">\{userAddress\.substring\(0, 6\)\}\.\.\.</span>{userAddress.substring(userAddress.length - 4)}`;
-                walletStatusDiv.innerHTML = `Connected: <span title="<span class="math-inline">\{userAddress\}"\></span>{shortAddress}</span>`;
+                // Display shortened address correctly
+                const shortAddress = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+                walletStatusDiv.innerHTML = `Connected: <span title="${userAddress}">${shortAddress}</span>`; // Fix display string
                 walletSectionDiv.classList.add('connected');
                 updateSignButtonVisibility(); // << Check if sign button should show AFTER connecting wallet
             } catch (error) {
@@ -188,7 +226,55 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Function to Sign Score Verification ---
-    async function signScoreVerification() { /* ... same code as before ... */ }
+    async function signScoreVerification() {
+        if (!signer) {
+            console.error("Signer not available. Please connect wallet.");
+            alert("Wallet not connected. Cannot sign score.");
+            return;
+        }
+        if (scoreToSign === null || scoreToSign <= 0) {
+             console.error("No valid score available to sign.");
+             // Maybe hide button again if score somehow became invalid?
+             // signScoreBtn.classList.add('hidden');
+             alert("No valid score from this session to sign.");
+             return;
+        }
+
+        // 1. Construct the message to sign
+        // You can customize this message
+        const message = `Verifying my score in Square Target Game: ${scoreToSign} points.`;
+        console.log("Attempting to sign message:", message);
+        alert(`Please sign the message in your wallet to verify your score of ${scoreToSign}.`); // Inform user
+
+        try {
+            // 2. Request signature from the user via MetaMask
+            const signature = await signer.signMessage(message);
+
+            // 3. Handle the signature (for now, just log and display it)
+            console.log("Signature received:", signature);
+            alert(`Score signed successfully!\nSignature: ${signature.substring(0, 10)}...${signature.substring(signature.length - 4)}`);
+
+            // --- Future Steps ---
+            // Here you would typically:
+            //  - Send the `message`, `signature`, and `userAddress` to a backend function.
+            //  - The backend would verify the signature against the userAddress and message.
+            //  - If valid, the backend might store this verification or trigger another action.
+            // ---------------------
+
+            // Optional: Hide the button after successful signing for this score?
+            // signScoreBtn.classList.add('hidden');
+            // scoreToSign = null; // Reset score signed
+
+
+        } catch (error) {
+            console.error("Error signing message:", error);
+            if (error.code === 4001) { // EIP-1193 user rejected request error
+                alert("Signature request rejected by user.");
+            } else {
+                alert(`Failed to sign message: ${error.message}`);
+            }
+        }
+    } // <<< END of signScoreVerification
 
 
     // --- Event Listeners ---
@@ -198,24 +284,35 @@ document.addEventListener('DOMContentLoaded', () => {
     btnUp.addEventListener('click', () => movePlayer('up')); btnDown.addEventListener('click', () => movePlayer('down'));
     btnLeft.addEventListener('click', () => movePlayer('left')); btnRight.addEventListener('click', () => movePlayer('right'));
     showLeaderboardBtn.addEventListener('click', fetchAndDisplayLeaderboard);
-    closeLeaderboardBtn.addEventListener('click', () => { leaderboardDialog.close(); });
-    leaderboardDialog.addEventListener('click', (event) => { const rect = leaderboardDialog.getBoundingClientRect(); const isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height && rect.left <= event.clientX && event.clientX <= rect.left + rect.width); if (!isInDialog) { leaderboardDialog.close(); } });
+    closeLeaderboardBtn.addEventListener('click', () => { if (leaderboardDialog.open) leaderboardDialog.close(); }); // Check if open before closing
+    leaderboardDialog.addEventListener('click', (event) => { const rect = leaderboardDialog.getBoundingClientRect(); const isInDialog = (rect.top <= event.clientY && event.clientY <= rect.top + rect.height && rect.left <= event.clientX && event.clientX <= rect.left + rect.width); if (!isInDialog && leaderboardDialog.open) { leaderboardDialog.close(); } }); // Check if open
     if(connectWalletBtn) { connectWalletBtn.addEventListener('click', connectWallet); } else { console.error("Connect Wallet Button not found!"); }
     if(signScoreBtn) { signScoreBtn.addEventListener('click', signScoreVerification); } else { console.error("Sign Score Button not found!"); }
 
     // --- Netlify Identity Event Listeners (for Sign Button update) ---
     netlifyIdentity.on('login', user => {
-        console.log('Netlify login event');
+        console.log('Netlify login event for:', user.email);
         updateSignButtonVisibility(); // Check visibility on login
     });
     netlifyIdentity.on('logout', () => {
         console.log('Netlify logout event');
         updateSignButtonVisibility(); // Check visibility on logout
+        // Also update wallet display if needed, although wallet remains connected technically
+        // Resetting wallet state might be desired on logout depending on UX goals
+        // ethersProvider = null; signer = null; userAddress = null;
+        // walletStatusDiv.textContent = 'Status: Not Connected';
+        // walletSectionDiv.classList.remove('connected');
     });
      netlifyIdentity.on('init', user => {
          console.log('Netlify init event');
-         // Optional: update UI based on initial login state if needed elsewhere
-         // updateSignButtonVisibility(); // Might not be needed if score is 0 initially
+         if (user) {
+             console.log('User already logged in:', user.email);
+             // Optional: update UI based on initial login state if needed elsewhere
+             // updateSignButtonVisibility(); // Check visibility on init if user exists
+             // Note: Wallet connection needs separate user action via button
+         } else {
+            console.log('User not logged in on init.');
+         }
      });
 
 
