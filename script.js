@@ -47,6 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const REQUIRED_TOKENS = 10000;
     const PULSECHAIN_ID = 369;
     let REQUIRED_BALANCE_WEI = null;
+    const PRIZE_CONTRACT_ADDRESS = "0xF81627C02A99D46384bc2341760c263dE1a5DAb3";
+    const PRIZE_CONTRACT_ABI = [ { "inputs": [], "name": "claimPrize", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "_prizeTokenAddress", "type": "address" } ], "stateMutability": "nonpayable", "type": "constructor" }, { "inputs": [ { "internalType": "address", "name": "owner", "type": "address" } ], "name": "OwnableInvalidOwner", "type": "error" }, { "inputs": [ { "internalType": "address", "name": "account", "type": "address" } ], "name": "OwnableUnauthorizedAccount", "type": "error" }, { "inputs": [], "name": "ReentrancyGuardReentrantCall", "type": "error" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "previousOwner", "type": "address" }, { "indexed": true, "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "OwnershipTransferred", "type": "event" }, { "anonymous": false, "inputs": [ { "indexed": true, "internalType": "address", "name": "claimant", "type": "address" }, { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" } ], "name": "PrizeClaimed", "type": "event" }, { "inputs": [], "name": "renounceOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [ { "internalType": "address", "name": "newOwner", "type": "address" } ], "name": "transferOwnership", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "stateMutability": "payable", "type": "fallback" }, { "inputs": [ { "internalType": "address", "name": "_tokenAddress", "type": "address" } ], "name": "withdrawAccidentalTokens", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "withdrawExcessPrizeTokens", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "inputs": [], "name": "withdrawNative", "outputs": [], "stateMutability": "nonpayable", "type": "function" }, { "stateMutability": "payable", "type": "receive" }, { "inputs": [], "name": "owner", "outputs": [ { "internalType": "address", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "PRIZE_TOKEN_DECIMALS", "outputs": [ { "internalType": "uint8", "name": "", "type": "uint8" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "prizeAmount", "outputs": [ { "internalType": "uint256", "name": "", "type": "uint256" } ], "stateMutability": "view", "type": "function" }, { "inputs": [], "name": "prizeToken", "outputs": [ { "internalType": "contract IERC20", "name": "", "type": "address" } ], "stateMutability": "view", "type": "function" } ];
     const segmentSize = 20;
     let snake = [];
     let dx = segmentSize;
@@ -337,9 +339,78 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleClaimPrize() {
-        console.log("Claim Prize button clicked!"); // Keep log for this action
-        alert("Claim functionality not yet implemented.\nNeed Smart Contract address and ABI.");
-        // TODO: Implement contract call and re-claim prevention
+        if (!signer) {
+            alert("Wallet not connected. Please connect your wallet first.");
+            return;
+        }
+        // Use the constants defined at the top
+        if (!PRIZE_CONTRACT_ADDRESS || !PRIZE_CONTRACT_ABI) {
+             alert("Prize contract details are missing in the script.");
+             console.error("PRIZE_CONTRACT_ADDRESS or PRIZE_CONTRACT_ABI is not defined.");
+             return;
+        }
+
+        // Ensure claim button exists before trying to disable it
+        if (claimPrizeBtn) {
+            claimPrizeBtn.disabled = true;
+            claimPrizeBtn.textContent = "Claiming...";
+        }
+
+        try {
+            // Create contract instance
+            const prizeContract = new ethers.Contract(PRIZE_CONTRACT_ADDRESS, PRIZE_CONTRACT_ABI, signer);
+
+            // Call the claimPrize function
+            console.log(`Calling claimPrize on ${PRIZE_CONTRACT_ADDRESS}...`); // Keep this log
+            const txResponse = await prizeContract.claimPrize();
+            console.log("Transaction sent:", txResponse.hash); // Keep this log
+            alert(`Claim transaction sent! Tx Hash: ${txResponse.hash}\nPlease wait for confirmation...`);
+
+            // Wait for the transaction to be mined
+            const txReceipt = await txResponse.wait();
+            console.log("Transaction confirmed:", txReceipt); // Keep this log
+
+            if (txReceipt.status === 1) {
+                // Success!
+                alert("Prize claimed successfully! Tokens should arrive shortly.");
+                // TODO LATER: Add logic here to record the claim in Supabase
+                if (claimPrizeBtn) {
+                    claimPrizeBtn.classList.add('hidden'); // Hide after successful claim for now
+                    claimPrizeBtn.textContent = "Claim Top 5 Prize (100k)";
+                    claimPrizeBtn.disabled = false;
+                }
+            } else {
+                // Transaction failed (reverted on chain)
+                console.error("Claim transaction failed:", txReceipt);
+                alert("Claim transaction failed. Please check the transaction on the block explorer.");
+                if (claimPrizeBtn) {
+                     claimPrizeBtn.disabled = false;
+                     claimPrizeBtn.textContent = "Claim Top 5 Prize (100k)";
+                }
+            }
+        } catch (error) {
+            console.error("Error during prize claim transaction:", error);
+            let errorMessage = "An error occurred during the claim process.";
+            if (error.code === 4001) {
+                errorMessage = "Transaction rejected in wallet.";
+            } else if (error.message) {
+                 if (error.message.includes("Contract out of funds")) {
+                     errorMessage = "Claim failed: The prize contract is currently out of funds.";
+                 } else if (error.message.includes("transfer failed")) {
+                     errorMessage = "Claim failed: The token transfer failed unexpectedly.";
+                 } else if (error.data?.message) { // Check deeper for revert reason
+                     errorMessage = `Claim failed: ${error.data.message}`;
+                 } else {
+                     errorMessage = `Claim failed: ${error.message.substring(0, 100)}...`;
+                 }
+            }
+            alert(errorMessage);
+
+            if (claimPrizeBtn) {
+                 claimPrizeBtn.disabled = false;
+                 claimPrizeBtn.textContent = "Claim Top 5 Prize (100k)";
+            }
+        }
     }
 
     async function fetchAndDisplayLeaderboard() {
