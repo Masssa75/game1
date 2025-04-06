@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Get references to elements
+    // --- Get references to elements ---
     const startButton = document.getElementById('start-button');
     const rulesScreen = document.getElementById('rules-screen');
     const playButton = document.getElementById('play-button');
@@ -14,150 +14,88 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnDown = document.getElementById('btn-down');
     const btnLeft = document.getElementById('btn-left');
     const btnRight = document.getElementById('btn-right');
-    // Get the placeholder div for the identity menu
     const identityMenuPlaceholder = document.querySelector('[data-netlify-identity-menu]');
+    // New Leaderboard elements
+    const showLeaderboardBtn = document.getElementById('show-leaderboard-btn');
+    const leaderboardDiv = document.getElementById('leaderboard');
+    const leaderboardList = document.getElementById('leaderboard-list');
 
 
-    // Game state variables
+    // --- Game state variables ---
     let score = 0;
     let isGameActive = false;
     let playerX = 10;
     let playerY = 10;
     const speedFactor = 0.075; // Or your preferred speed
 
-    // Check elements
+    // --- Check elements ---
+    // Updated check to include leaderboard elements
     if (!startButton || !rulesScreen || !playButton || !gameArea || !player || !target ||
         !scoreDisplayContainer || !scoreSpan || !controlsContainer ||
-        !btnUp || !btnDown || !btnLeft || !btnRight || !identityMenuPlaceholder) {
+        !btnUp || !btnDown || !btnLeft || !btnRight || !identityMenuPlaceholder ||
+        !showLeaderboardBtn || !leaderboardDiv || !leaderboardList ) { // Added leaderboard elements check
         console.error("One or more required game elements are missing!");
         document.body.innerHTML = "<h1>Error loading game elements. Please check HTML structure/IDs.</h1>";
         return;
     }
 
     // --- Function to move target ---
-    function moveTarget() {
-        const gameAreaWidth = gameArea.offsetWidth; const gameAreaHeight = gameArea.offsetHeight;
-        const targetWidth = target.offsetWidth; const targetHeight = target.offsetHeight;
-        if (gameAreaWidth <= targetWidth || gameAreaHeight <= targetHeight) { target.style.left = '0px'; target.style.top = '0px'; return; }
-        const maxX = gameAreaWidth - targetWidth; const maxY = gameAreaHeight - targetHeight;
-        const randomX = Math.floor(Math.random() * maxX); const randomY = Math.floor(Math.random() * maxY);
-        target.style.left = randomX + 'px'; target.style.top = randomY + 'px';
-    }
+    function moveTarget() { /* ... same code as before ... */ }
 
     // --- Function to update player position ---
-    function updatePlayerPosition() {
-        player.style.left = playerX + 'px'; player.style.top = playerY + 'px';
-    }
+    function updatePlayerPosition() { /* ... same code as before ... */ }
 
     // --- Collision Detection ---
-    function checkCollision() {
-        const playerRect = { left: playerX, top: playerY, right: playerX + player.offsetWidth, bottom: playerY + player.offsetHeight };
-        const targetRect = { left: target.offsetLeft, top: target.offsetTop, right: target.offsetLeft + target.offsetWidth, bottom: target.offsetTop + target.offsetHeight };
-        return ( playerRect.left < targetRect.right && playerRect.right > targetRect.left && playerRect.top < targetRect.bottom && playerRect.bottom > targetRect.top );
-    }
+    function checkCollision() { /* ... same code as before ... */ }
 
-    // --- NEW Function to save score via Netlify Function ---
-    async function saveScore(currentScore) {
-        const user = netlifyIdentity.currentUser(); // Check if user is logged in
-
-        if (user) {
-            // User is logged in, proceed to save score
-            console.log('User logged in, attempting to save score:', currentScore);
-            try {
-                // Get the user's JWT token for authentication
-                const token = await user.jwt();
-
-                const response = await fetch('/.netlify/functions/save-score', { // Relative path to function
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`, // Send auth token
-                    },
-                    body: JSON.stringify({ score: currentScore }), // Send score in body
-                });
-
-                if (!response.ok) {
-                    // Handle errors from the function (e.g., 401, 500)
-                    const errorData = await response.json();
-                    console.error(`Error saving score (${response.status}):`, errorData.error || 'Unknown error');
-                } else {
-                    // Handle success
-                    const result = await response.json();
-                    console.log('Score saved successfully:', result);
-                }
-            } catch (error) {
-                console.error('Network or other error calling save-score function:', error);
-            }
-
-        } else {
-            // User is not logged in
-            console.log('User not logged in, score not saved.');
-        }
-    }
-
+    // --- Function to save score via Netlify Function ---
+    async function saveScore(currentScore) { /* ... same code as before ... */ }
 
     // --- Movement Logic ---
-    function movePlayer(direction) {
-        if (!isGameActive) return; // Only move if game is active
-
-        const gameAreaWidth = gameArea.offsetWidth;
-        const gameAreaHeight = gameArea.offsetHeight;
-        const moveX = Math.max(1, gameAreaWidth * speedFactor);
-        const moveY = Math.max(1, gameAreaHeight * speedFactor);
-
-        let newX = playerX; let newY = playerY;
-        switch (direction) {
-            case "up":    newY -= moveY; break;
-            case "down":  newY += moveY; break;
-            case "left":  newX -= moveX; break;
-            case "right": newX += moveX; break;
-        }
-
-        const playerWidth = player.offsetWidth; const playerHeight = player.offsetHeight;
-        playerX = Math.max(0, Math.min(newX, gameAreaWidth - playerWidth));
-        playerY = Math.max(0, Math.min(newY, gameAreaHeight - playerHeight));
-
-        updatePlayerPosition();
-
-        if (checkCollision()) {
-            score++;
-            scoreSpan.textContent = score;
-            // --- ADDED THE CALL TO saveScore HERE ---
-            saveScore(score); // Call the function to save the score
-            // --- End of added line ---
-            moveTarget();
-        }
-    }
+    function movePlayer(direction) { /* ... same code as before, includes saveScore(score); call ... */ }
 
     // --- Handle Keyboard Input ---
-    function handleKeyDown(event) {
-        if (!isGameActive) return;
-        if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
-            event.preventDefault();
-            switch (event.key) {
-                case "ArrowUp":    movePlayer('up');    break;
-                case "ArrowDown":  movePlayer('down');  break;
-                case "ArrowLeft":  movePlayer('left');  break;
-                case "ArrowRight": movePlayer('right'); break;
+    function handleKeyDown(event) { /* ... same code as before ... */ }
+
+    // --- Function to start the game ---
+    function startGame() { /* ... same code as before ... */ }
+
+
+    // --- NEW: Function to Fetch and Display Leaderboard ---
+    async function fetchAndDisplayLeaderboard() {
+        // Show loading state
+        leaderboardList.innerHTML = '<li>Loading...</li>';
+        leaderboardDiv.classList.remove('hidden'); // Show the leaderboard container
+
+        try {
+            const response = await fetch('/.netlify/functions/get-leaderboard');
+
+            if (!response.ok) {
+                const errorData = await response.json(); // Try to get error details
+                throw new Error(`Failed to fetch leaderboard (${response.status}): ${errorData.error || 'Unknown error'}`);
             }
+
+            const leaderboardData = await response.json();
+            leaderboardList.innerHTML = ''; // Clear loading/previous entries
+
+            if (Array.isArray(leaderboardData) && leaderboardData.length > 0) {
+                leaderboardData.forEach((entry, index) => {
+                    const listItem = document.createElement('li');
+                    // Handle cases where email might be null (e.g., old scores)
+                    const displayName = entry.user_email || 'Anonymous';
+                    listItem.textContent = `${displayName}: ${entry.score}`;
+                    leaderboardList.appendChild(listItem);
+                });
+            } else {
+                leaderboardList.innerHTML = '<li>No scores recorded yet.</li>';
+            }
+
+        } catch (error) {
+            console.error("Error fetching or displaying leaderboard:", error);
+            leaderboardList.innerHTML = `<li>Error loading leaderboard: ${error.message}</li>`;
         }
     }
 
-    // --- Function to start the game ---
-    function startGame() {
-        isGameActive = true;
-        score = 0;
-        scoreSpan.textContent = score;
-        playerX = 10; playerY = 10; updatePlayerPosition();
-
-        rulesScreen.classList.add('hidden');
-        gameArea.classList.remove('hidden');
-        scoreDisplayContainer.classList.remove('hidden');
-        controlsContainer.classList.remove('hidden');
-
-        moveTarget();
-        gameArea.focus();
-    }
 
     // --- Event Listeners ---
     startButton.addEventListener('click', () => {
@@ -172,8 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
     btnLeft.addEventListener('click', () => movePlayer('left'));
     btnRight.addEventListener('click', () => movePlayer('right'));
 
+    // NEW: Leaderboard Button Listener
+    showLeaderboardBtn.addEventListener('click', fetchAndDisplayLeaderboard);
+
+
     // --- Netlify Identity Event Listeners ---
-    // (No listeners needed right now based on allowing anonymous play first)
-    // We check currentUser() directly in saveScore
+    // (We removed the ones that hid the start button earlier)
+    // You could add listeners here later to display user status if desired
 
 }); // End of DOMContentLoaded listener

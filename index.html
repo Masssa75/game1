@@ -9,9 +9,7 @@
 </head>
 <body>
     <h1>Square Target Game</h1>
-    <div data-netlify-identity-menu></div> <button id="start-button" tabindex="0">Start Game</button>
-
-    <div id="rules-screen" class="hidden">
+    <div data-netlify-identity-menu></div> <button id="start-button" tabindex="0">Start Game</button> <div id="rules-screen" class="hidden">
         <h2>How to Play</h2>
         <p>Use the <kbd>▲</kbd> <kbd>▼</kbd> <kbd>◄</kbd> <kbd>►</kbd> arrow keys or on-screen buttons to move the blue square.</p>
         <p>Move the square onto the red target to score points.</p>
@@ -36,6 +34,14 @@
         <button id="btn-down">▼</button>
     </div>
 
+    <div id="leaderboard-controls">
+         <button id="show-leaderboard-btn">Show Leaderboard</button>
+    </div>
+    <div id="leaderboard" class="hidden"> <h2>Leaderboard (Top 10 Scores)</h2>
+         <ol id="leaderboard-list">
+             <li>Loading...</li>
+         </ol>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>

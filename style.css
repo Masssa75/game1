@@ -49,13 +49,13 @@ kbd {
     white-space: nowrap;
 }
 
-button {
+button { /* Default button style (like Start/Play) */
     padding: 10px 20px;
     font-size: 1.1em;
     cursor: pointer;
     border: 1px solid #333;
     border-radius: 5px;
-    background-color: #4CAF50;
+    background-color: #4CAF50; /* Green */
     color: white;
     margin-top: 15px;
 }
@@ -147,6 +147,61 @@ button:focus {
 #controls > div {
     display: flex;
     justify-content: center;
+}
+
+/* --- Leaderboard Styles --- */
+
+#leaderboard-controls {
+    margin-top: 20px; /* Space above the button */
+    text-align: center;
+}
+
+#show-leaderboard-btn {
+    /* Use specific styling for this button */
+    padding: 10px 20px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border: 1px solid #333;
+    border-radius: 5px;
+    background-color: #007bff; /* Blue */
+    color: white;
+    margin-top: 0; /* Reset margin if needed */
+}
+
+#show-leaderboard-btn:hover {
+    background-color: #0056b3;
+}
+
+
+#leaderboard {
+    border: 2px solid #ccc;
+    background-color: #f9f9f9;
+    padding: 15px;
+    margin-top: 15px; /* Space below button */
+    border-radius: 8px;
+    width: 80%;
+    max-width: 450px; /* Adjust width as needed */
+    text-align: center;
+}
+
+#leaderboard h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.3em;
+    color: #333;
+}
+
+#leaderboard-list {
+    list-style-type: decimal; /* Use numbers */
+    padding-left: 30px; /* Indent list items */
+    margin: 0;
+    text-align: left; /* Align list items left */
+}
+
+#leaderboard-list li {
+    margin-bottom: 8px; /* Space between list items */
+    font-size: 1.1em;
+    color: #555;
 }
 
 .hidden {
