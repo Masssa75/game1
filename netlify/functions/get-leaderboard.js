@@ -1,4 +1,4 @@
-// netlify/functions/get-leaderboard.js (Updated to select wallet_address)
+// netlify/functions/get-leaderboard.js (Selects wallet_address instead of email)
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event, context) => {
@@ -20,12 +20,12 @@ exports.handler = async (event, context) => {
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   try {
-    // Fetch top 10 scores, NOW including wallet_address
+    // Fetch top 10 scores, selecting wallet_address and score
     const { data, error } = await supabase
       .from('scores')
-      // *** SELECT user_email, score, AND wallet_address ***
-      .select('user_email, score, wallet_address')
-      // *************************************************
+      // *** SELECT wallet_address and score ***
+      .select('wallet_address, score')
+      // *************************************
       .order('score', { ascending: false })
       .limit(10);
 
@@ -34,11 +34,10 @@ exports.handler = async (event, context) => {
       throw error;
     }
 
-    // Return the leaderboard data (now includes wallet_address for each entry)
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify(data),
+      body: JSON.stringify(data), // Send array of { wallet_address, score }
     };
 
   } catch (error) {
