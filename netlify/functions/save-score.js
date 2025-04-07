@@ -1,11 +1,11 @@
-// netlify/functions/save-score.js (REMOVED Netlify Auth, saves wallet_address)
+// netlify/functions/save-score.js (Updated to save wallet_address)
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event, context) => {
   // CORS Headers
   const headers = {
-    'Access-Control-Allow-Origin': process.env.URL || '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization', // Keep Authorization header allowed just in case needed later, though not used now
+    'Access-Control-Allow-Origin': process.env.URL || '*', // Use environment variable or wildcard
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 
@@ -19,22 +19,25 @@ exports.handler = async (event, context) => {
     return { statusCode: 405, headers, body: 'Method Not Allowed: Please use POST' };
   }
 
-  // --- Netlify Identity Authentication REMOVED ---
-  // const { user } = context.clientContext;
-  // if (!user) { ... } // Removed check
+  // 1. Check Authentication (Netlify Identity)
+  const { user } = context.clientContext;
+  if (!user) {
+    // console.log("Save score function invoked - User not found in context."); // Optional server log
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'You must be logged in to save scores.' }) };
+  }
 
-  // 1. Get Supabase Credentials
+  // 2. Get Supabase Credentials from Environment Variables
   const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_KEY; // Still use SERVICE key for inserts
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY; // Use SERVICE key for backend inserts
   if (!supabaseUrl || !supabaseKey) {
        console.error('Supabase environment variables (URL or Service Key) are missing.');
        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Server configuration error.' }) };
   }
 
-  // 2. Initialize Supabase Client
+  // 3. Initialize Supabase Client
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // 3. Parse Request Body (Score and Wallet Address are now required)
+  // 4. Parse Request Body (Score and Wallet Address)
   let scoreData;
   try {
     scoreData = JSON.parse(event.body);
@@ -42,40 +45,41 @@ exports.handler = async (event, context) => {
     if (typeof scoreData.score !== 'number') {
         throw new Error('Invalid score data type provided.');
     }
+    // *** ADD VALIDATION FOR wallet_address ***
     if (typeof scoreData.wallet_address !== 'string' || !scoreData.wallet_address.trim()) {
          throw new Error('Invalid or missing wallet_address provided.');
     }
+    // *****************************************
   } catch (error) {
     console.error('Error parsing request body:', error.message);
     return { statusCode: 400, headers, body: JSON.stringify({ error: `Bad request: ${error.message}` }) };
   }
 
-  // 4. Prepare Data for Insertion (ONLY score and wallet_address)
+  // 5. Prepare Data for Insertion (including wallet_address)
+  // *** ADD wallet_address TO THE INSERT DATA OBJECT ***
   const dataToInsert = {
-    // user_id: user.sub, // Removed
-    score: scoreData.score,
-    // user_email: user.email, // Removed
-    wallet_address: scoreData.wallet_address.trim() // Keep wallet address
+    user_id: user.sub,                  // Netlify user ID
+    score: scoreData.score,             // Score from request body
+    user_email: user.email,             // Email from Netlify user context
+    wallet_address: scoreData.wallet_address.trim() // Wallet address from request body (trimmed)
   };
-  // Note: user_id and user_email columns in Supabase will now receive NULL unless you set defaults or remove the columns.
+  // ************************************************
 
-  // 5. Insert Data into Supabase
+  // 6. Insert Data into Supabase
   try {
     const { data, error } = await supabase
-      .from('scores')
-      .insert([dataToInsert])
-      .select();
+      .from('scores')           // Target the 'scores' table
+      .insert([dataToInsert])   // Insert the prepared data object
+      .select();                // Optionally return the inserted row(s)
 
     if (error) {
       console.error('Supabase insert error:', error);
-      // Handle specific errors like constraint violations if needed
-      // e.g., if wallet_address + score needed to be unique per user/period
-      throw error;
+      throw error; // Re-throw to be caught by the outer catch block
     }
 
-    // 6. Return Success Response
+    // 7. Return Success Response
     return {
-      statusCode: 200,
+      statusCode: 200, // OK
       headers,
       body: JSON.stringify({ message: 'Score saved successfully!', savedData: data }),
     };
@@ -83,7 +87,7 @@ exports.handler = async (event, context) => {
   } catch (error) {
     console.error('Error saving score to Supabase:', error.message);
     return {
-      statusCode: 500,
+      statusCode: 500, // Internal Server Error
       headers,
       body: JSON.stringify({ error: 'Failed to save score.', details: error.message || 'Unknown Supabase error' }),
     };
