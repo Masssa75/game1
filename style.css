@@ -144,7 +144,7 @@ button:focus {
 #game-area {
     width: 90vw; /* Responsive width */
     max-width: 500px; /* Max width */
-    height: 60vw; /* Responsive height */
+    height: 350px; /* Responsive height */
     max-height: 350px; /* Max height */
     border: 3px solid var(--neon-purple);
     border-radius: 10px;
