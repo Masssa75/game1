@@ -1,199 +1,296 @@
-/* Consolidated and Simplified Body Styles */
+/* style.css - Neon/Synthwave Theme Attempt */
+
+/* --- Variables (Customize Colors Here) --- */
+:root {
+    --background-dark: #0d0221;
+    --background-light: #261447;
+    --neon-pink: #ff00ff;
+    --neon-purple: #9d00ff;
+    --neon-blue: #00f0ff;
+    --neon-green: #00ff9d;
+    --neon-red: #ff3333;
+    --text-light: #f0f0f0;
+    --font-primary: "Orbitron", sans-serif; /* Use imported font */
+}
+
+/* --- Base Styles --- */
 html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    font-family: Arial, sans-serif;
-    box-sizing: border-box; /* Apply box-sizing globally */
+    font-family: var(--font-primary);
+    box-sizing: border-box;
+    color: var(--text-light);
 }
 
-*, *:before, *:after { /* Inherit box-sizing */
+*, *:before, *:after {
   box-sizing: inherit;
 }
 
 body {
     display: flex;
-    flex-direction: column; /* Stack elements vertically */
-    justify-content: center; /* Center vertically */
-    align-items: center;     /* Center horizontally */
-    min-height: 100%;        /* Use full height */
-    background-color: #f0f0f0; /* Light grey background */
-    padding: 10px;           /* Add some padding around content */
-    overscroll-behavior-y: contain; /* Prevent pull-to-refresh on mobile */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100%;
+    background: linear-gradient(135deg, var(--background-dark) 0%, var(--background-light) 100%);
+    padding: 20px;
+    overscroll-behavior-y: contain;
 }
 
-h1, h2 {
-    text-align: center;
-    margin-top: 0; /* Remove default top margin */
+/* --- Typography --- */
+h1 {
+    font-size: 3.5rem; /* Larger */
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--neon-blue);
+    margin-bottom: 30px;
+    text-shadow:
+        0 0 5px var(--neon-blue),
+        0 0 10px var(--neon-blue),
+        0 0 20px var(--neon-blue),
+        0 0 40px var(--neon-pink),
+        0 0 70px var(--neon-pink);
+}
+
+h2 { /* Used in rules, leaderboard dialog */
+    color: var(--neon-pink);
+    text-shadow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-pink);
     margin-bottom: 15px;
+    text-align: center;
 }
 
 p {
-    margin-top: 5px;
-    margin-bottom: 10px;
-    font-size: 1.1em;
     text-align: center;
+    line-height: 1.6;
+    font-size: 1em; /* Adjusted */
 }
 
-kbd {
-    background-color: #eee;
-    border-radius: 3px;
-    border: 1px solid #b4b4b4;
-    box-shadow: 0 1px 1px rgba(0, 0, 0, .2), 0 2px 0 0 rgba(255, 255, 255, .7) inset;
-    color: #333;
-    display: inline-block;
-    font-size: 0.85em;
-    font-weight: 700;
-    line-height: 1;
-    padding: 2px 4px;
-    white-space: nowrap;
-}
-
-button { /* Default button style (like Start/Play) */
-    padding: 10px 20px;
+/* --- Buttons (General Neon Style) --- */
+button {
+    font-family: var(--font-primary);
+    padding: 10px 25px; /* Adjusted padding */
     font-size: 1.1em;
+    font-weight: 600; /* Bolder */
     cursor: pointer;
-    border: 1px solid #333;
-    border-radius: 5px;
-    background-color: #4CAF50; /* Green */
-    color: white;
-    margin-top: 15px;
+    border: 2px solid var(--neon-pink);
+    border-radius: 8px; /* More rounded */
+    background-color: transparent; /* See-through */
+    color: var(--neon-pink);
+    margin: 10px 5px; /* Adjusted margin */
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 5px var(--neon-pink), 0 0 10px var(--neon-pink) inset;
+    text-shadow: 0 0 3px var(--neon-pink);
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: rgba(255, 0, 255, 0.1); /* Slight pink background on hover */
+    color: var(--text-light); /* Brighter text */
+    box-shadow: 0 0 8px var(--neon-pink), 0 0 15px var(--neon-pink), 0 0 10px var(--neon-pink) inset;
+    text-shadow: 0 0 5px var(--text-light);
 }
 
-/* --- Sign Score Button Style --- */
-#sign-score-btn {
-    background-color: #6f42c1; /* Purple */
-    color: white;
-    padding: 8px 15px;
-    font-size: 1.0em;
-    margin-top: 10px; /* Adjust spacing */
-    /* Inherits other button styles like border-radius, cursor */
-    /* It starts hidden via class="hidden" in HTML */
+button:disabled { /* Style for disabled play button */
+    border-color: #555;
+    color: #555;
+    cursor: not-allowed;
+    box-shadow: none;
+    text-shadow: none;
 }
-
-#sign-score-btn:hover {
-    background-color: #5a32a2;
+button:disabled:hover {
+     background-color: transparent;
+     box-shadow: none;
+     color: #555;
 }
 
 button:focus {
-    outline: 2px solid blue;
-    outline-offset: 2px;
+    outline: 2px solid var(--neon-blue); /* Keep focus outline */
+    outline-offset: 3px;
+}
+
+/* Specific Button Colors */
+#show-leaderboard-btn, #restart-button {
+    border-color: var(--neon-blue);
+    color: var(--neon-blue);
+    box-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue) inset;
+    text-shadow: 0 0 3px var(--neon-blue);
+}
+#show-leaderboard-btn:hover, #restart-button:hover {
+    background-color: rgba(0, 240, 255, 0.1);
+    box-shadow: 0 0 8px var(--neon-blue), 0 0 15px var(--neon-blue), 0 0 10px var(--neon-blue) inset;
+}
+
+#claim-prize-btn {
+    border-color: var(--neon-green);
+    color: var(--neon-green);
+    box-shadow: 0 0 5px var(--neon-green), 0 0 10px var(--neon-green) inset;
+    text-shadow: 0 0 3px var(--neon-green);
+}
+#claim-prize-btn:hover {
+    background-color: rgba(0, 255, 157, 0.1);
+    box-shadow: 0 0 8px var(--neon-green), 0 0 15px var(--neon-green), 0 0 10px var(--neon-green) inset;
+}
+#claim-prize-btn:disabled { /* For "Claiming..." state */
+    border-color: #555;
+    color: #555;
+    cursor: wait;
+    box-shadow: none;
+    text-shadow: none;
+}
+
+
+/* --- Game Area --- */
+#game-area {
+    width: 90vw; /* Responsive width */
+    max-width: 500px; /* Max width */
+    height: 60vw; /* Responsive height */
+    max-height: 350px; /* Max height */
+    border: 3px solid var(--neon-purple);
+    border-radius: 10px;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.3); /* Darker, slightly transparent */
+    overflow: hidden;
+    margin: 20px auto;
+    cursor: default;
+    box-shadow: 0 0 10px var(--neon-purple), 0 0 20px var(--neon-purple), 0 0 15px var(--neon-purple) inset;
+}
+
+#game-area:focus { outline: none; }
+
+/* --- Game Elements --- */
+#player { /* Snake Head */
+    width: 20px; height: 20px;
+    background-color: var(--neon-green);
+    position: absolute;
+    border-radius: 2px; /* Slight rounding */
+    box-shadow: 0 0 5px var(--neon-green);
+}
+
+.snake-segment { /* Snake Body */
+    width: 20px; height: 20px;
+    background-color: color-mix(in srgb, var(--neon-green) 70%, black 30%); /* Darker green */
+    position: absolute;
+    border-radius: 2px;
+    /* border: 1px solid color-mix(in srgb, var(--neon-green) 50%, black 50%); */
+}
+
+#food {
+    width: 20px; height: 20px;
+    background-color: var(--neon-red);
+    border-radius: 50%; /* Circle */
+    position: absolute;
+    box-shadow: 0 0 8px var(--neon-red), 0 0 15px var(--neon-red);
+}
+
+/* --- UI Sections --- */
+#score-display {
+    margin-top: 15px;
+    text-align: center;
+    font-size: 1.5em;
+    color: var(--text-light);
+    text-shadow: 0 0 5px var(--text-light);
+}
+#score-display p { margin-bottom: 5px; }
+
+#wallet-section {
+    margin: 20px auto;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--neon-purple);
+    border-radius: 8px;
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 0 8px var(--neon-purple) inset;
+}
+
+#wallet-status {
+    font-size: 0.9em;
+    color: var(--text-light);
+    word-break: break-all;
+    line-height: 1.5;
+    margin-top: 10px;
+}
+
+.token-info {
+    font-size: 0.85em;
+    color: var(--neon-blue);
+    margin-top: 5px;
+    display: block;
+    text-shadow: 0 0 3px var(--neon-blue);
+}
+
+#connect-wallet-btn { /* Specific style */
+    border-color: var(--neon-blue);
+    color: var(--neon-blue);
+    box-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue) inset;
+    text-shadow: 0 0 3px var(--neon-blue);
+    margin: 0; /* Reset margin */
+}
+#connect-wallet-btn:hover {
+    background-color: rgba(0, 240, 255, 0.1);
+    box-shadow: 0 0 8px var(--neon-blue), 0 0 15px var(--neon-blue), 0 0 10px var(--neon-blue) inset;
+}
+
+#wallet-section.connected #connect-wallet-btn { display: none; }
+
+#playability-status { /* Status message for token req */
+     margin-top: 10px;
+     text-align: center;
+     font-weight: bold;
+     min-height: 1.2em;
+     /* Color set by JS */
 }
 
 #rules-screen {
-    border: 2px solid #ccc;
-    background-color: #fff;
-    padding: 20px;
+    border: 2px solid var(--neon-pink);
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 25px;
     border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 0 10px var(--neon-pink), 0 0 15px var(--neon-pink) inset;
     width: 80%;
     max-width: 500px;
     text-align: center;
+    margin-top: 20px;
 }
-
-#game-area {
-    width: 90%;
-    max-width: 600px;
-    height: 400px; /* Fixed height might be okay */
-    max-height: 65vh; /* Limit height relative to viewport */
-    border: 3px solid black;
-    position: relative;
-    background-color: #ffffff;
-    overflow: hidden; /* Important for snake game! */
-    margin-top: 15px;
-    cursor: default;
-}
-
-#game-area:focus {
-    outline: none;
-}
-
-/* --- Snake Game Element Styles --- */
-#player { /* Represents the Snake HEAD */
-    width: 20px;  /* Match segmentSize in script.js */
-    height: 20px; /* Match segmentSize in script.js */
-    background-color: green; /* Snake head color */
-    position: absolute;
-    /* JavaScript will set top/left */
-}
-
-.snake-segment { /* Style for Snake BODY parts */
-    width: 20px;  /* Match segmentSize */
-    height: 20px; /* Match segmentSize */
-    background-color: limegreen; /* Snake body color */
-    position: absolute;
-    /* Add border or slightly rounded corners if desired */
-    /* border: 1px solid darkgreen; */
-    /* border-radius: 3px; */
-}
-
-#food { /* RENAMED from #target */
-    width: 20px;  /* Match segmentSize */
-    height: 20px; /* Match segmentSize */
-    background-color: red; /* Food color */
-    border-radius: 50%; /* Keep it circular? */
-    position: absolute;
-    /* JavaScript will set top/left and ensure visibility */
-}
-
-/* --- End Snake Game Element Styles --- */
+#rules-screen p { text-align: left; margin-bottom: 15px; }
+#rules-screen kbd { background: #333; border-color: #555; color: var(--neon-pink); box-shadow: none; }
 
 
-#score-display {
-    margin-top: 15px;
-    text-align: center; /* Center align text and button within */
-}
-
-/* --- Styles for Restart Button --- */
-#restart-button {
-    display: inline-block; /* Allow it near score, or use block */
-    margin: 10px 0 0 0; /* Add some top margin */
-    /* Centering handled by text-align on parent #score-display if block */
-    /* If inline-block, can add margin: 10px auto 0 auto if parent isn't text-align: center */
-    padding: 8px 15px; /* Slightly smaller */
-    font-size: 1.0em;
-    cursor: pointer;
-    border: 1px solid #333;
-    border-radius: 5px;
-    background-color: #007bff; /* Blue like leaderboard button */
-    color: white;
-    /* Initially hidden via class="hidden" */
-}
-
-#restart-button:hover {
-    background-color: #0056b3;
-}
-/* --- End OF Restart Button STYLES --- */
-
-
+/* --- On-Screen Controls --- */
 #controls {
-    margin-top: 15px;
+    margin-top: 25px;
     text-align: center;
     user-select: none;
     -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
 }
 
 #controls button {
     font-size: 1.8em;
-    padding: 8px 15px;
-    min-width: 60px;
+    padding: 0; /* Remove padding */
+    width: 60px;  /* Fixed size */
+    height: 60px; /* Fixed size */
     margin: 5px;
-    background-color: #d3d3d3;
-    color: #333;
-    border: 1px solid #aaa;
+    background-color: transparent;
+    color: var(--neon-blue);
+    border: 2px solid var(--neon-blue);
     border-radius: 8px;
-    line-height: 1.2;
-    touch-action: manipulation; /* Prevent double-tap zoom */
+    line-height: 56px; /* Center icon vertically */
+    box-shadow: 0 0 5px var(--neon-blue), 0 0 8px var(--neon-blue) inset;
+    text-shadow: 0 0 3px var(--neon-blue);
+    transition: all 0.2s ease;
+}
+
+#controls button:hover {
+     background-color: rgba(0, 240, 255, 0.1);
+     box-shadow: 0 0 8px var(--neon-blue), 0 0 15px var(--neon-blue), 0 0 10px var(--neon-blue) inset;
+     color: var(--text-light);
 }
 
 #controls button:active {
-    background-color: #bbb;
+    background-color: rgba(0, 240, 255, 0.2);
+    box-shadow: 0 0 5px var(--neon-blue), 0 0 10px var(--neon-blue) inset;
 }
 
 #controls > div {
@@ -201,145 +298,41 @@ button:focus {
     justify-content: center;
 }
 
-/* --- Wallet Connect Styles --- */
-#wallet-section {
-    margin-top: 10px;
-    margin-bottom: 10px;
-    padding: 10px;
-    background-color: #eee;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    text-align: center;
-    min-width: 250px; /* Ensure it's wide enough */
-    max-width: 90%; /* Prevent excessive width */
-}
+/* --- Leaderboard --- */
+#leaderboard-controls { margin-top: 20px; text-align: center; }
 
-#connect-wallet-btn {
-    /* Style like leaderboard button */
-    padding: 8px 15px;
-    font-size: 1.0em; /* Slightly smaller */
-    cursor: pointer;
-    border: 1px solid #333;
-    border-radius: 5px;
-    background-color: #ffc107; /* Amber/Yellow */
-    color: black;
-    margin: 0; /* Reset button margin */
-    margin-right: 10px; /* Space between button and status */
-}
-
-#connect-wallet-btn:hover {
-    background-color: #e0a800;
-}
-
-#wallet-status {
-    /* display: inline-block; Keep on same line as button */
-    /* Now contains multiple lines, adjust alignment if needed */
-    font-size: 0.9em;
-    color: #555;
-    word-break: break-all; /* Allow long addresses to wrap */
-    vertical-align: middle; /* Align text vertically with button */
-    line-height: 1.4; /* Adjust line height for readability */
-}
-
-/* --- ADDED Style for Token Info --- */
-.token-info {
-    font-size: 0.85em; /* Slightly smaller */
-    color: #333;
-    margin-top: 4px; /* Add some space */
-    display: block; /* Ensure it appears on its own line */
-}
-/* --- END OF ADDED Style --- */
-
-
-/* Style for when wallet is connected */
-#wallet-section.connected #connect-wallet-btn {
-    display: none; /* Hide connect button when connected */
-}
-/* #wallet-section.connected #disconnect-wallet-btn { display: inline-block; } */ /* For a disconnect button later */
-
-
-/* --- Leaderboard Styles --- */
-
-#leaderboard-controls {
-    margin-top: 20px; /* Space above the button */
-    text-align: center;
-}
-
-#show-leaderboard-btn {
-    /* Use specific styling for this button */
-    padding: 10px 20px;
-    font-size: 1.1em;
-    cursor: pointer;
-    border: 1px solid #333;
-    border-radius: 5px;
-    background-color: #007bff; /* Blue */
-    color: white;
-    margin-top: 0; /* Reset margin if needed */
-}
-
-#show-leaderboard-btn:hover {
-    background-color: #0056b3;
-}
-
-/* Styles for the <dialog> element */
 dialog#leaderboard-dialog {
-    border: 2px solid #ccc;
-    background-color: #f9f9f9;
-    padding: 20px;
-    padding-top: 35px; /* Extra padding at top for close button */
-    border-radius: 8px;
+    border: 2px solid var(--neon-purple);
+    background: linear-gradient(135deg, var(--background-light) 0%, var(--background-dark) 100%);
+    padding: 25px;
+    padding-top: 40px;
+    border-radius: 10px;
     width: 80%;
     max-width: 450px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    position: relative; /* Needed for absolute positioning of close button */
-    /* Default centering is handled by showModal() */
+    box-shadow: 0 0 15px var(--neon-purple), 0 0 25px var(--neon-purple);
+    position: relative;
+    color: var(--text-light);
 }
 
-/* Style the backdrop that appears behind the modal */
 dialog#leaderboard-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(13, 2, 33, 0.7); /* Dark backdrop */
+  backdrop-filter: blur(3px);
 }
 
+dialog#leaderboard-dialog h2 { color: var(--neon-purple); margin-bottom: 20px; text-shadow: 0 0 5px var(--neon-purple); }
 
-dialog#leaderboard-dialog h2 {
-    margin-top: 0;
-    margin-bottom: 15px;
-    font-size: 1.3em;
-    color: #333;
-    text-align: center;
-}
+#leaderboard-list { list-style-type: decimal; padding-left: 30px; margin: 0; text-align: left; }
+#leaderboard-list li { margin-bottom: 10px; font-size: 1.1em; color: var(--text-light); }
 
-#leaderboard-list { /* Style for the <ol> inside the dialog */
-    list-style-type: decimal; /* Use numbers */
-    padding-left: 30px; /* Indent list items */
-    margin: 0;
-    text-align: left;
+#close-leaderboard-btn { /* Style close button */
+    position: absolute; top: 10px; right: 10px;
+    background: none; border: none; font-size: 1.8em;
+    line-height: 1; padding: 5px; cursor: pointer;
+    color: var(--neon-pink); /* Match dialog accent */
+    text-shadow: 0 0 5px var(--neon-pink);
+    margin: 0; box-shadow: none; /* Override button defaults */
 }
+#close-leaderboard-btn:hover { color: var(--text-light); background: none; box-shadow: none; }
 
-#leaderboard-list li {
-    margin-bottom: 8px; /* Space between list items */
-    font-size: 1.1em;
-    color: #555;
-}
-
-/* Style for the new Close button */
-#close-leaderboard-btn {
-    position: absolute;
-    top: 5px;
-    right: 5px;
-    background: none;
-    border: none;
-    font-size: 1.5em;
-    line-height: 1;
-    padding: 5px;
-    cursor: pointer;
-    color: #888;
-    margin: 0; /* Reset button margin */
-}
- #close-leaderboard-btn:hover {
-    color: #333;
-}
-
-.hidden { /* Keep the hidden class */
-    display: none;
-}
+/* --- Utility --- */
+.hidden { display: none; }
